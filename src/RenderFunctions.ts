@@ -52,6 +52,7 @@ export function findRange(
 ) {
   let fmin = -1
   let fmax = -1
+  const extremeFeatures: Array<{name: string, type: string, fmin: number, fmax: number}> = []
 
   for (const feature of data) {
     const featureChildren = feature.children
@@ -63,10 +64,21 @@ export function findRange(
           }
           if (fmax < 0 || featureChild.fmax > fmax) {
             fmax = featureChild.fmax
+            // Track what's extending the range
+            extremeFeatures.push({
+              name: featureChild.name || 'unnamed',
+              type: featureChild.type,
+              fmin: featureChild.fmin,
+              fmax: featureChild.fmax
+            })
           }
         }
       }) // transcript level
     } // gene level
+  }
+
+  if (extremeFeatures.length > 0) {
+    console.log('🔍 Features extending range:', extremeFeatures.slice(-3)) // Last 3 that extended fmax
   }
 
   return {

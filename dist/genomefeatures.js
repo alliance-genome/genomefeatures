@@ -2291,13 +2291,19 @@ function Yi(t, e, n) {
 }
 function gs(t, e) {
   let n = -1, i = -1;
-  for (const r of t) {
-    const a = r.children;
-    a && a.forEach((s) => {
-      e.includes(s.type) && ((n < 0 || s.fmin < n) && (n = s.fmin), (i < 0 || s.fmax > i) && (i = s.fmax));
+  const r = [];
+  for (const a of t) {
+    const s = a.children;
+    s && s.forEach((o) => {
+      e.includes(o.type) && ((n < 0 || o.fmin < n) && (n = o.fmin), (i < 0 || o.fmax > i) && (i = o.fmax, r.push({
+        name: o.name || "unnamed",
+        type: o.type,
+        fmin: o.fmin,
+        fmax: o.fmax
+      })));
     });
   }
-  return {
+  return r.length > 0 && console.log("🔍 Features extending range:", r.slice(-3)), {
     fmin: n,
     fmax: i
   };
