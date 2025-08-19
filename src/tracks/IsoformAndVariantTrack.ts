@@ -41,6 +41,7 @@ export default class IsoformAndVariantTrack {
   private variantTypes: string[]
   private binRatio: number
   private showVariantLabel: boolean
+  private geneBounds?: { start: number; end: number }
 
   constructor({
     viewer,
@@ -55,6 +56,7 @@ export default class IsoformAndVariantTrack {
     initialHighlight,
     trackData,
     variantData,
+    geneBounds,
   }: {
     viewer: Selection<SVGGElement, unknown, HTMLElement | null, undefined>
     height: number
@@ -68,6 +70,7 @@ export default class IsoformAndVariantTrack {
     initialHighlight?: string[]
     trackData?: SimpleFeatureSerialized[]
     variantData?: VariantFeature[]
+    geneBounds?: { start: number; end: number }
   }) {
     this.trackData = trackData ?? []
     this.variantData = variantData ?? []
@@ -81,6 +84,7 @@ export default class IsoformAndVariantTrack {
     this.variantTypes = variantTypes
     this.binRatio = binRatio
     this.showVariantLabel = showVariantLabel ?? true
+    this.geneBounds = geneBounds
   }
 
   DrawTrack() {
@@ -106,8 +110,23 @@ export default class IsoformAndVariantTrack {
     const display_feats = this.transcriptTypes
     const dataRange = findRange(isoformData, display_feats)
 
-    const viewStart = dataRange.fmin
-    const viewEnd = dataRange.fmax
+    let viewStart = dataRange.fmin
+    let viewEnd = dataRange.fmax
+    
+    // If we have gene bounds from the API, use them to constrain the view
+    if (this.geneBounds) {
+      // Use gene bounds without extra padding
+      viewStart = this.geneBounds.start
+      viewEnd = this.geneBounds.end
+      
+      // Include transcript features if they extend beyond gene bounds
+      if (dataRange.fmin < viewStart) {
+        viewStart = dataRange.fmin
+      }
+      if (dataRange.fmax > viewEnd) {
+        viewEnd = dataRange.fmax
+      }
+    }
 
     // constants
     const EXON_HEIGHT = 10 // will be white / transparent
@@ -132,7 +151,7 @@ export default class IsoformAndVariantTrack {
     const deletionTrack = viewer
       .append('g')
       .attr('class', 'deletions track')
-      .attr('transform', 'translate(0,22.5)')
+      .attr('transform', 'translate(0,35)')
     const labelTrack = viewer.append('g').attr('class', 'label')
 
     const sortWeight = {} as Record<string, number>
@@ -148,14 +167,21 @@ export default class IsoformAndVariantTrack {
 
     const geneList = {} as Record<string, string>
 
+    // Sort by genomic position instead of alphabetically
+    // This ensures genes are displayed in their natural chromosomal order
+    // and prevents the primary gene from being pushed out of view by alphabetically earlier genes
     isoformData = isoformData.sort((a, b) => {
+      // First priority: selected genes come first
       if (a.selected && !b.selected) {
         return -1
       }
       if (!a.selected && b.selected) {
         return 1
       }
-      return a.name.localeCompare(b.name)
+      // Second priority: sort by genomic start position
+      const aStart = a.fmin || 0
+      const bStart = b.fmin || 0
+      return aStart - bStart
     })
 
     let heightBuffer = 0
