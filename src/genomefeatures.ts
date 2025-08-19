@@ -71,7 +71,7 @@ export class GenomeFeatureViewer {
     width: number,
     height: number,
   ) {
-    console.log('🚀 GenomeFeatureViewer constructor called with:', {
+    console.log('GenomeFeatureViewer constructor called with:', {
       config,
       svg_target,
       width,
@@ -210,6 +210,8 @@ export class GenomeFeatureViewer {
           binRatio,
           isoformFilter,
           geneBounds: (track as any).geneBounds,
+          geneSymbol: (track as any).geneSymbol,
+          geneId: (track as any).geneId,
         })
         trackHeight += isoformVariantTrack.DrawTrack()
       } else if (track.type === TRACK_TYPE.ISOFORM_EMBEDDED_VARIANT) {

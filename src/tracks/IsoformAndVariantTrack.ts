@@ -42,6 +42,8 @@ export default class IsoformAndVariantTrack {
   private binRatio: number
   private showVariantLabel: boolean
   private geneBounds?: { start: number; end: number }
+  private geneSymbol?: string
+  private geneId?: string
 
   constructor({
     viewer,
@@ -57,6 +59,8 @@ export default class IsoformAndVariantTrack {
     trackData,
     variantData,
     geneBounds,
+    geneSymbol,
+    geneId,
   }: {
     viewer: Selection<SVGGElement, unknown, HTMLElement | null, undefined>
     height: number
@@ -71,6 +75,8 @@ export default class IsoformAndVariantTrack {
     trackData?: SimpleFeatureSerialized[]
     variantData?: VariantFeature[]
     geneBounds?: { start: number; end: number }
+    geneSymbol?: string
+    geneId?: string
   }) {
     this.trackData = trackData ?? []
     this.variantData = variantData ?? []
@@ -85,6 +91,8 @@ export default class IsoformAndVariantTrack {
     this.binRatio = binRatio
     this.showVariantLabel = showVariantLabel ?? true
     this.geneBounds = geneBounds
+    this.geneSymbol = geneSymbol
+    this.geneId = geneId
   }
 
   DrawTrack() {
@@ -122,13 +130,15 @@ export default class IsoformAndVariantTrack {
     const CDS_feats = ['CDS']
     const exon_feats = ['exon']
     const display_feats = this.transcriptTypes
-    const dataRange = findRange(isoformData, display_feats, this.geneBounds)
+    const dataRange = findRange(isoformData, display_feats, this.geneBounds, this.geneSymbol, this.geneId)
     
     console.log('📊 Data range from findRange:', {
       dataRange,
       display_feats,
       isoformDataLength: isoformData.length,
       geneBounds: this.geneBounds,
+      geneSymbol: this.geneSymbol,
+      geneId: this.geneId,
     })
 
     let viewStart = dataRange.fmin

@@ -4,7 +4,7 @@ export declare function checkSpace(used_space: string[][], start: number, end: n
 export declare function findRange(data: SimpleFeatureSerialized[], display_feats: unknown[], geneBounds?: {
     start: number;
     end: number;
-}): {
+}, geneSymbol?: string, geneId?: string): {
     fmin: number;
     fmax: number;
 };

@@ -50,42 +50,61 @@ export function findRange(
   data: SimpleFeatureSerialized[],
   display_feats: unknown[],
   geneBounds?: { start: number; end: number },
+  geneSymbol?: string,
+  geneId?: string,
 ) {
   let fmin = -1
   let fmax = -1
   const extremeFeatures: Array<{name: string, type: string, fmin: number, fmax: number}> = []
   
-  // If we have gene bounds, we'll only consider features from genes that overlap with these bounds
+  // We'll only consider features from the target gene
   const targetGenes: SimpleFeatureSerialized[] = []
   
-  if (geneBounds) {
-    // Find genes that match our gene bounds (should be our target gene)
+  if (geneSymbol || geneId) {
+    // Find genes that match our gene identifier
     for (const feature of data) {
-      // Check if this top-level feature (gene) overlaps with our gene bounds
-      const geneOverlapsTarget = 
-        feature.fmin <= geneBounds.end && 
-        feature.fmax >= geneBounds.start
+      // Check if this top-level feature (gene) matches our target gene
+      // Gene names might include the symbol (e.g., "Pax6") or ID (e.g., "MGI:97490")
+      const geneMatches = 
+        (geneSymbol && feature.name?.toLowerCase().includes(geneSymbol.toLowerCase())) ||
+        (geneId && (feature.name?.includes(geneId) || feature.id?.includes(geneId)))
       
-      if (geneOverlapsTarget) {
+      if (geneMatches) {
         targetGenes.push(feature)
-        console.log('✅ Found target gene:', {
+        console.log('Found target gene by identifier:', {
           name: feature.name,
+          id: feature.id,
           fmin: feature.fmin,
           fmax: feature.fmax,
-          geneBounds
+          geneSymbol,
+          geneId
         })
       } else {
-        console.log('⚠️ Ignoring neighboring gene:', {
+        console.log('Ignoring non-matching gene:', {
           name: feature.name,
+          id: feature.id,
           fmin: feature.fmin,
           fmax: feature.fmax,
-          geneBounds
         })
       }
     }
+    
+    // Check if we found any matching genes
+    if (targetGenes.length === 0) {
+      console.error('No genes found matching identifiers:', { geneSymbol, geneId })
+      // Return invalid range to indicate error
+      return {
+        fmin: -1,
+        fmax: -1,
+      }
+    }
   } else {
-    // No gene bounds provided, consider all genes
-    targetGenes.push(...data)
+    // No gene identifier provided - this is an error condition
+    console.error('No gene identifier provided - cannot render without geneSymbol or geneId')
+    return {
+      fmin: -1,
+      fmax: -1,
+    }
   }
 
   // Now only process children of target genes
@@ -115,7 +134,7 @@ export function findRange(
   }
 
   if (extremeFeatures.length > 0) {
-    console.log('🔍 Features extending range to fmax=' + fmax + ':', 
+    console.log('Features extending range to fmax=' + fmax + ':', 
       extremeFeatures.slice(-3).map(f => `${f.name} (${f.type}): ${f.fmin}-${f.fmax}`))
   }
 
