@@ -71,6 +71,13 @@ export class GenomeFeatureViewer {
     width: number,
     height: number,
   ) {
+    console.log('🚀 GenomeFeatureViewer constructor called with:', {
+      config,
+      svg_target,
+      width,
+      height,
+      tracks: config.tracks,
+    })
     this.height = height
     this.width = width
     this.config = config

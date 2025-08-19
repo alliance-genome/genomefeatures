@@ -9701,7 +9701,13 @@ Se.prototype.last = function() {
 };
 class $p {
   constructor(e, n, i, r) {
-    this.height = r, this.width = i, this.config = e, this.svg_target = n, this.viewer = this._initViewer(n), this.draw();
+    console.log("🚀 GenomeFeatureViewer constructor called with:", {
+      config: e,
+      svg_target: n,
+      width: i,
+      height: r,
+      tracks: e.tracks
+    }), this.height = r, this.width = i, this.config = e, this.svg_target = n, this.viewer = this._initViewer(n), this.draw();
   }
   generateLegend() {
     return Iu();
