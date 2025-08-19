@@ -1,7 +1,10 @@
 import { SimpleFeatureSerialized } from './services/types';
 import * as d3 from 'd3-selection';
 export declare function checkSpace(used_space: string[][], start: number, end: number): number;
-export declare function findRange(data: SimpleFeatureSerialized[], display_feats: unknown[]): {
+export declare function findRange(data: SimpleFeatureSerialized[], display_feats: unknown[], geneBounds?: {
+    start: number;
+    end: number;
+}): {
     fmin: number;
     fmax: number;
 };

@@ -49,28 +49,66 @@ export function checkSpace(used_space: string[][], start: number, end: number) {
 export function findRange(
   data: SimpleFeatureSerialized[],
   display_feats: unknown[],
+  geneBounds?: { start: number; end: number },
 ) {
   let fmin = -1
   let fmax = -1
   const extremeFeatures: Array<{name: string, type: string, fmin: number, fmax: number}> = []
+  
+  // If we have gene bounds, use them as the initial range
+  if (geneBounds) {
+    fmin = geneBounds.start
+    fmax = geneBounds.end
+    console.log('🎯 Using gene bounds as initial range:', { fmin, fmax })
+  }
 
   for (const feature of data) {
     const featureChildren = feature.children
     if (featureChildren) {
       featureChildren.forEach(featureChild => {
         if (display_feats.includes(featureChild.type)) {
+          // Always update fmin if we find something earlier
           if (fmin < 0 || featureChild.fmin < fmin) {
             fmin = featureChild.fmin
           }
-          if (fmax < 0 || featureChild.fmax > fmax) {
-            fmax = featureChild.fmax
-            // Track what's extending the range
-            extremeFeatures.push({
-              name: featureChild.name || 'unnamed',
-              type: featureChild.type,
-              fmin: featureChild.fmin,
-              fmax: featureChild.fmax
-            })
+          
+          // For fmax, we need to be more careful
+          if (geneBounds) {
+            // If we have gene bounds, only extend fmax for transcripts that start within or near the gene
+            const transcriptStartsNearGene = featureChild.fmin <= geneBounds.end + 1000 // Allow 1kb buffer
+            const transcriptBelongsToGene = featureChild.fmin >= geneBounds.start - 10000 // Allow 10kb upstream
+            
+            if (transcriptStartsNearGene && transcriptBelongsToGene) {
+              // This transcript likely belongs to our gene
+              if (fmax < 0 || featureChild.fmax > fmax) {
+                fmax = featureChild.fmax
+                extremeFeatures.push({
+                  name: featureChild.name || 'unnamed',
+                  type: featureChild.type,
+                  fmin: featureChild.fmin,
+                  fmax: featureChild.fmax
+                })
+              }
+            } else {
+              // This transcript likely belongs to a neighboring gene - don't let it extend our view
+              console.log('⚠️ Ignoring transcript from likely neighboring gene:', {
+                name: featureChild.name,
+                fmin: featureChild.fmin,
+                fmax: featureChild.fmax,
+                geneBounds,
+              })
+            }
+          } else {
+            // No gene bounds provided, use all transcripts (original behavior)
+            if (fmax < 0 || featureChild.fmax > fmax) {
+              fmax = featureChild.fmax
+              extremeFeatures.push({
+                name: featureChild.name || 'unnamed',
+                type: featureChild.type,
+                fmin: featureChild.fmin,
+                fmax: featureChild.fmax
+              })
+            }
           }
         }
       }) // transcript level

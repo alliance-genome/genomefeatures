@@ -2289,26 +2289,42 @@ function Yi(t, e, n) {
   }
   return i;
 }
-function gs(t, e) {
-  let n = -1, i = -1;
-  const r = [];
-  for (const a of t) {
-    const s = a.children;
-    s && s.forEach((o) => {
-      e.includes(o.type) && ((n < 0 || o.fmin < n) && (n = o.fmin), (i < 0 || o.fmax > i) && (i = o.fmax, r.push({
-        name: o.name || "unnamed",
-        type: o.type,
-        fmin: o.fmin,
-        fmax: o.fmax
-      })));
+function gs(t, e, n) {
+  let i = -1, r = -1;
+  const a = [];
+  n && (i = n.start, r = n.end, console.log("🎯 Using gene bounds as initial range:", { fmin: i, fmax: r }));
+  for (const s of t) {
+    const o = s.children;
+    o && o.forEach((c) => {
+      if (e.includes(c.type))
+        if ((i < 0 || c.fmin < i) && (i = c.fmin), n) {
+          const f = c.fmin <= n.end + 1e3, u = c.fmin >= n.start - 1e4;
+          f && u ? (r < 0 || c.fmax > r) && (r = c.fmax, a.push({
+            name: c.name || "unnamed",
+            type: c.type,
+            fmin: c.fmin,
+            fmax: c.fmax
+          })) : console.log("⚠️ Ignoring transcript from likely neighboring gene:", {
+            name: c.name,
+            fmin: c.fmin,
+            fmax: c.fmax,
+            geneBounds: n
+          });
+        } else
+          (r < 0 || c.fmax > r) && (r = c.fmax, a.push({
+            name: c.name || "unnamed",
+            type: c.type,
+            fmin: c.fmin,
+            fmax: c.fmax
+          }));
     });
   }
-  return r.length > 0 && console.log(
-    "🔍 Features extending range to fmax=" + i + ":",
-    r.slice(-3).map((a) => `${a.name} (${a.type}): ${a.fmin}-${a.fmax}`)
+  return a.length > 0 && console.log(
+    "🔍 Features extending range to fmax=" + r + ":",
+    a.slice(-3).map((s) => `${s.name} (${s.type}): ${s.fmin}-${s.fmax}`)
   ), {
-    fmin: n,
-    fmax: i
+    fmin: i,
+    fmax: r
   };
 }
 function ze(t) {
@@ -2835,11 +2851,12 @@ class Ru {
       filteredLength: r.length,
       variantFilter: this.variantFilter
     });
-    const a = this.viewer, s = this.width, o = this.binRatio, c = Nu(r), f = c.length, u = this.trackData[0].source, g = this.trackData[0].seqId, p = e.length === 0 ? 9 : 30, d = ["UTR", "five_prime_UTR", "three_prime_UTR"], T = ["CDS"], B = ["exon"], I = this.transcriptTypes, S = gs(n, I);
+    const a = this.viewer, s = this.width, o = this.binRatio, c = Nu(r), f = c.length, u = this.trackData[0].source, g = this.trackData[0].seqId, p = e.length === 0 ? 9 : 30, d = ["UTR", "five_prime_UTR", "three_prime_UTR"], T = ["CDS"], B = ["exon"], I = this.transcriptTypes, S = gs(n, I, this.geneBounds);
     console.log("📊 Data range from findRange:", {
       dataRange: S,
       display_feats: I,
-      isoformDataLength: n.length
+      isoformDataLength: n.length,
+      geneBounds: this.geneBounds
     });
     let k = S.fmin, y = S.fmax;
     console.log("🎯 Initial view bounds:", {

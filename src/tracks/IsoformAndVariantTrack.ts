@@ -122,12 +122,13 @@ export default class IsoformAndVariantTrack {
     const CDS_feats = ['CDS']
     const exon_feats = ['exon']
     const display_feats = this.transcriptTypes
-    const dataRange = findRange(isoformData, display_feats)
+    const dataRange = findRange(isoformData, display_feats, this.geneBounds)
     
     console.log('📊 Data range from findRange:', {
       dataRange,
       display_feats,
       isoformDataLength: isoformData.length,
+      geneBounds: this.geneBounds,
     })
 
     let viewStart = dataRange.fmin
