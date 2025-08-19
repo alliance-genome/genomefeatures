@@ -202,6 +202,7 @@ export class GenomeFeatureViewer {
           variantFilter,
           binRatio,
           isoformFilter,
+          geneBounds: (track as any).geneBounds,
         })
         trackHeight += isoformVariantTrack.DrawTrack()
       } else if (track.type === TRACK_TYPE.ISOFORM_EMBEDDED_VARIANT) {

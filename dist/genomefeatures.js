@@ -9768,7 +9768,8 @@ class $p {
           variantData: E,
           variantFilter: f,
           binRatio: r,
-          isoformFilter: u
+          isoformFilter: u,
+          geneBounds: $.geneBounds
         });
         N += F.DrawTrack();
       } else if ($.type === Pe.ISOFORM_EMBEDDED_VARIANT) {
