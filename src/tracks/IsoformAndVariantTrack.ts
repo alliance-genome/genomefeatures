@@ -198,10 +198,16 @@ export default class IsoformAndVariantTrack {
     console.log('📐 D3 Scale created:', {
       domain: [viewStart, viewEnd],
       range: [0, width],
+      viewStart,
+      viewEnd,
+      width,
+      geneBounds: this.geneBounds,
       testMapping: {
         viewStart: x(viewStart),
         viewEnd: x(viewEnd),
         midpoint: x((viewStart + viewEnd) / 2),
+        geneStart: this.geneBounds ? x(this.geneBounds.start) : 'N/A',
+        geneEnd: this.geneBounds ? x(this.geneBounds.end) : 'N/A',
       },
     })
 
@@ -698,13 +704,26 @@ export default class IsoformAndVariantTrack {
                   )
                 })
 
+              const transcriptX = x(featureChild.fmin)
+              const transcriptWidth = x(featureChild.fmax) - x(featureChild.fmin)
+              
+              console.log('🎨 Rendering transcript backbone:', {
+                name: featureChild.name,
+                fmin: featureChild.fmin,
+                fmax: featureChild.fmax,
+                x_position: transcriptX,
+                width: transcriptWidth,
+                scale_domain: x.domain(),
+                scale_range: x.range(),
+              })
+              
               isoform
                 .append('rect')
                 .attr('class', 'transcriptBackbone')
                 .attr('y', 10 + ISOFORM_TITLE_HEIGHT)
                 .attr('height', TRANSCRIPT_BACKBONE_HEIGHT)
-                .attr('transform', `translate(${x(featureChild.fmin)},0)`)
-                .attr('width', x(featureChild.fmax) - x(featureChild.fmin))
+                .attr('transform', `translate(${transcriptX},0)`)
+                .attr('width', transcriptWidth)
                 .on('click', () => {
                   renderTooltipDescription(
                     tooltipDiv,
