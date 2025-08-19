@@ -78,7 +78,8 @@ export function findRange(
   }
 
   if (extremeFeatures.length > 0) {
-    console.log('🔍 Features extending range:', extremeFeatures.slice(-3)) // Last 3 that extended fmax
+    console.log('🔍 Features extending range to fmax=' + fmax + ':', 
+      extremeFeatures.slice(-3).map(f => `${f.name} (${f.type}): ${f.fmin}-${f.fmax}`))
   }
 
   return {

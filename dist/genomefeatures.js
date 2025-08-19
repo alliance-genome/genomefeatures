@@ -2303,7 +2303,10 @@ function gs(t, e) {
       })));
     });
   }
-  return r.length > 0 && console.log("🔍 Features extending range:", r.slice(-3)), {
+  return r.length > 0 && console.log(
+    "🔍 Features extending range to fmax=" + i + ":",
+    r.slice(-3).map((a) => `${a.name} (${a.type}): ${a.fmin}-${a.fmax}`)
+  ), {
     fmin: n,
     fmax: i
   };
