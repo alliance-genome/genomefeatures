@@ -114,6 +114,10 @@ export default class IsoformTrack {
     const arrow_width = 10
     const arrow_points = `0,0 0,${arrow_height} ${arrow_width},${arrow_width}`
 
+    // Track which genes have been labeled to avoid duplicates
+    const geneList: Record<string, string> = {}
+    const GENE_LABEL_HEIGHT = 20
+
     // eslint-disable-next-line @typescript-eslint/unbound-method
     const renderTooltipDescription = this.renderTooltipDescription
 
@@ -183,6 +187,7 @@ export default class IsoformTrack {
       .attr('class', 'track')
 
     let row_count = 0
+    let heightBuffer = 0
     const used_space = [] as string[][]
     let fmin_display = -1
     let fmax_display = -1
@@ -223,12 +228,20 @@ export default class IsoformTrack {
             )
             if (row_count < MAX_ROWS) {
               // An isoform container
+              let addingGeneLabel = false
+              const featName = feature.name
+              if (!Object.keys(geneList).includes(featName)) {
+                heightBuffer += GENE_LABEL_HEIGHT
+                addingGeneLabel = true
+                geneList[featName] = 'Added'
+              }
+
               const isoform = track
                 .append('g')
                 .attr('class', 'isoform')
                 .attr(
                   'transform',
-                  `translate(0,${row_count * isoform_height + 10})`,
+                  `translate(0,${row_count * isoform_height + 10 + heightBuffer})`,
                 )
 
               const transcriptStart = Math.max(x(featureChild.fmin), 0)
@@ -271,10 +284,30 @@ export default class IsoformTrack {
                     closeToolTip,
                   )
                 })
-              let text_string = featureChild.name
-              if (feature.name !== featureChild.name) {
-                text_string += ` (${feature.name})`
+
+              // Add gene label if this is the first time we've seen this gene
+              if (addingGeneLabel) {
+                const geneLabel = isoform
+                  .append('text')
+                  .attr('class', 'geneLabel')
+                  .attr('fill', selected ? 'sandybrown' : 'black')
+                  .attr('opacity', selected ? 1 : 0.8)
+                  .attr(
+                    'transform',
+                    `translate(${x(featureChild.fmin)},-${GENE_LABEL_HEIGHT})`,
+                  )
+                  .text(featName)
+                  .on('click', () => {
+                    renderTooltipDescription(
+                      tooltipDiv,
+                      renderTrackDescription(feature),
+                      closeToolTip,
+                    )
+                  })
               }
+
+              // Create transcript label (without gene name)
+              let text_string = featureChild.name
               let labelOffset = Math.max(x(featureChild.fmin), 0)
               const textLabel = isoform
                 .append('svg:text')
@@ -510,6 +543,6 @@ export default class IsoformTrack {
         )
     }
     // we return the appropriate height function
-    return row_count * isoform_height
+    return row_count * isoform_height + heightBuffer
   }
 }
