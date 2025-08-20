@@ -1072,7 +1072,10 @@ export default class IsoformAndVariantTrack {
       .transition()
       .duration(200)
       .style('width', 'auto')
+      .style('max-width', '700px')
       .style('height', 'auto')
+      .style('overflow-wrap', 'break-word')
+      .style('word-break', 'break-all')
       .style('opacity', 1)
       .style('visibility', 'visible')
 
