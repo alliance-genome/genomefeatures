@@ -230,7 +230,9 @@ export default class IsoformTrack {
               // An isoform container
               let addingGeneLabel = false
               const featName = feature.name
+              console.log('IsoformTrack: Processing feature', { featName, transcriptName: featureChild.name, geneListKeys: Object.keys(geneList) })
               if (!Object.keys(geneList).includes(featName)) {
+                console.log('IsoformTrack: Adding gene label for', featName)
                 heightBuffer += GENE_LABEL_HEIGHT
                 addingGeneLabel = true
                 geneList[featName] = 'Added'
@@ -308,6 +310,7 @@ export default class IsoformTrack {
 
               // Create transcript label (without gene name)
               let text_string = featureChild.name
+              console.log('IsoformTrack: Creating transcript label', { text_string, addingGeneLabel })
               let labelOffset = Math.max(x(featureChild.fmin), 0)
               const textLabel = isoform
                 .append('svg:text')
