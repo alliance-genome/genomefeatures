@@ -57,37 +57,84 @@ export function findRange(
   let fmax = -1
   const extremeFeatures: Array<{name: string, type: string, fmin: number, fmax: number}> = []
   
-  // We'll only consider features from the target gene
-  const targetGenes: SimpleFeatureSerialized[] = []
+  console.log('findRange - Input:', {
+    dataLength: data.length,
+    display_feats,
+    geneBounds,
+    geneSymbol,
+    geneId,
+    dataFeatures: data.map(d => ({ name: d.name, id: d.id, type: d.type, fmin: d.fmin, fmax: d.fmax }))
+  })
   
-  if (geneSymbol || geneId) {
-    // Find genes that match our gene identifier
+  // If no gene filtering is provided, process all data (this is the case for allele pages)
+  // The allele page already has filtered data specific to the gene
+  if (!geneSymbol && !geneId) {
+    // Process all features in the data
     for (const feature of data) {
-      // Check if this top-level feature (gene) matches our target gene
-      // Gene names might include the symbol (e.g., "Pax6") or ID (e.g., "MGI:97490")
-      const geneMatches = 
-        (geneSymbol && feature.name?.toLowerCase().includes(geneSymbol.toLowerCase())) ||
-        (geneId && (feature.name?.includes(geneId) || feature.id?.includes(geneId)))
-      
-      if (geneMatches) {
-        targetGenes.push(feature)
+      const featureChildren = feature.children
+      if (featureChildren) {
+        featureChildren.forEach(featureChild => {
+          if (display_feats.includes(featureChild.type)) {
+            // Update fmin if we find something earlier
+            if (fmin < 0 || featureChild.fmin < fmin) {
+              fmin = featureChild.fmin
+            }
+            
+            // Update fmax if we find something later
+            if (fmax < 0 || featureChild.fmax > fmax) {
+              fmax = featureChild.fmax
+            }
+          }
+        })
       }
     }
     
-    // Check if we found any matching genes
-    if (targetGenes.length === 0) {
-      // Return invalid range to indicate error
-      return {
-        fmin: -1,
-        fmax: -1,
+    console.log('findRange - No gene filtering, using all data. Result:', { fmin, fmax })
+    return { fmin, fmax }
+  }
+  
+  // We'll only consider features from the target gene
+  const targetGenes: SimpleFeatureSerialized[] = []
+  
+  // Find genes that match our gene identifier
+  for (const feature of data) {
+    // Check if this top-level feature (gene) matches our target gene
+    // Gene names might include the symbol (e.g., "Pax6") or ID (e.g., "MGI:97490")
+    const geneMatches = 
+      (geneSymbol && feature.name?.toLowerCase().includes(geneSymbol.toLowerCase())) ||
+      (geneId && (feature.name?.includes(geneId) || feature.id?.includes(geneId)))
+    
+    if (geneMatches) {
+      targetGenes.push(feature)
+      console.log('findRange - Found matching gene:', { name: feature.name, id: feature.id })
+    }
+  }
+  
+  // Check if we found any matching genes
+  if (targetGenes.length === 0) {
+    console.warn('findRange - No matching genes found for:', { geneSymbol, geneId })
+    // Fall back to processing all data if no matches found
+    for (const feature of data) {
+      const featureChildren = feature.children
+      if (featureChildren) {
+        featureChildren.forEach(featureChild => {
+          if (display_feats.includes(featureChild.type)) {
+            // Update fmin if we find something earlier
+            if (fmin < 0 || featureChild.fmin < fmin) {
+              fmin = featureChild.fmin
+            }
+            
+            // Update fmax if we find something later  
+            if (fmax < 0 || featureChild.fmax > fmax) {
+              fmax = featureChild.fmax
+            }
+          }
+        })
       }
     }
-  } else {
-    // No gene identifier provided - this is an error condition
-    return {
-      fmin: -1,
-      fmax: -1,
-    }
+    
+    console.log('findRange - Fallback to all data. Result:', { fmin, fmax })
+    return { fmin, fmax }
   }
 
   // Now only process children of target genes
@@ -138,6 +185,12 @@ export function findRange(
   }
 
   // Features that extended the range have been tracked in extremeFeatures for debugging if needed
+  console.log('findRange - Final result for target genes:', { 
+    fmin, 
+    fmax, 
+    targetGenesCount: targetGenes.length,
+    extremeFeatures 
+  })
 
   return {
     fmin: fmin,

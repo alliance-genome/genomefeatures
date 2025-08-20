@@ -122,6 +122,13 @@ export default class IsoformAndVariantTrack {
     let viewStart = dataRange.fmin
     let viewEnd = dataRange.fmax
     
+    console.log('IsoformAndVariantTrack - Initial bounds:', {
+      dataRange,
+      geneBounds: this.geneBounds,
+      geneSymbol: this.geneSymbol,
+      geneId: this.geneId
+    })
+    
     // If we have gene bounds from the API, use them to constrain the view
     if (this.geneBounds) {
       // Use gene bounds without extra padding
@@ -135,6 +142,16 @@ export default class IsoformAndVariantTrack {
       if (dataRange.fmax > viewEnd) {
         viewEnd = dataRange.fmax
       }
+      
+      console.log('IsoformAndVariantTrack - Adjusted bounds with geneBounds:', {
+        viewStart,
+        viewEnd,
+        adjustment: {
+          usedGeneBoundsStart: viewStart === this.geneBounds.start,
+          usedGeneBoundsEnd: viewEnd === this.geneBounds.end,
+          extendedByTranscripts: dataRange.fmin < this.geneBounds.start || dataRange.fmax > this.geneBounds.end
+        }
+      })
     }
 
     // constants
