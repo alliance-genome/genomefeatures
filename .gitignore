@@ -8,7 +8,8 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
+# dist temporarily commented out for debugging
+# dist
 dist-ssr
 *.local
 
