@@ -7,6 +7,12 @@ interface Track {
     label?: string;
     variantData?: VariantFeature[];
     trackData?: SimpleFeatureSerialized[];
+    geneBounds?: {
+        start: number;
+        end: number;
+    };
+    geneSymbol?: string;
+    geneId?: string;
 }
 interface ViewerConfig {
     tracks?: Track[];

@@ -71,27 +71,11 @@ export function findRange(
       
       if (geneMatches) {
         targetGenes.push(feature)
-        console.log('Found target gene by identifier:', {
-          name: feature.name,
-          id: feature.id,
-          fmin: feature.fmin,
-          fmax: feature.fmax,
-          geneSymbol,
-          geneId
-        })
-      } else {
-        console.log('Ignoring non-matching gene:', {
-          name: feature.name,
-          id: feature.id,
-          fmin: feature.fmin,
-          fmax: feature.fmax,
-        })
       }
     }
     
     // Check if we found any matching genes
     if (targetGenes.length === 0) {
-      console.error('No genes found matching identifiers:', { geneSymbol, geneId })
       // Return invalid range to indicate error
       return {
         fmin: -1,
@@ -100,7 +84,6 @@ export function findRange(
     }
   } else {
     // No gene identifier provided - this is an error condition
-    console.error('No gene identifier provided - cannot render without geneSymbol or geneId')
     return {
       fmin: -1,
       fmax: -1,
@@ -133,10 +116,7 @@ export function findRange(
     } // gene level
   }
 
-  if (extremeFeatures.length > 0) {
-    console.log('Features extending range to fmax=' + fmax + ':', 
-      extremeFeatures.slice(-3).map(f => `${f.name} (${f.type}): ${f.fmin}-${f.fmax}`))
-  }
+  // Features that extended the range have been tracked in extremeFeatures for debugging if needed
 
   return {
     fmin: fmin,

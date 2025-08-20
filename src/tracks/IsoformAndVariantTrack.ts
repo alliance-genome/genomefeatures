@@ -96,13 +96,6 @@ export default class IsoformAndVariantTrack {
   }
 
   DrawTrack() {
-    console.log('🔍 IsoformAndVariantTrack.DrawTrack() called with:', {
-      geneBounds: this.geneBounds,
-      trackDataLength: this.trackData.length,
-      variantDataLength: this.variantData.length,
-      width: this.width,
-    })
-    
     const isoformFilter = this.isoformFilter
     let isoformData = this.trackData
     const initialHighlight = this.initialHighlight
@@ -110,12 +103,6 @@ export default class IsoformAndVariantTrack {
       this.variantData,
       this.variantFilter,
     )
-    
-    console.log('🧬 Filtered variant data:', {
-      originalLength: this.variantData.length,
-      filteredLength: variantData.length,
-      variantFilter: this.variantFilter,
-    })
     
     const viewer = this.viewer
     const width = this.width
@@ -131,60 +118,23 @@ export default class IsoformAndVariantTrack {
     const exon_feats = ['exon']
     const display_feats = this.transcriptTypes
     const dataRange = findRange(isoformData, display_feats, this.geneBounds, this.geneSymbol, this.geneId)
-    
-    console.log('📊 Data range from findRange:', {
-      dataRange,
-      display_feats,
-      isoformDataLength: isoformData.length,
-      geneBounds: this.geneBounds,
-      geneSymbol: this.geneSymbol,
-      geneId: this.geneId,
-    })
 
     let viewStart = dataRange.fmin
     let viewEnd = dataRange.fmax
     
-    console.log('🎯 Initial view bounds:', {
-      viewStart,
-      viewEnd,
-      viewWidth: viewEnd - viewStart,
-    })
-    
     // If we have gene bounds from the API, use them to constrain the view
     if (this.geneBounds) {
-      console.log('📍 Applying gene bounds:', {
-        geneBounds: this.geneBounds,
-        beforeViewStart: viewStart,
-        beforeViewEnd: viewEnd,
-      })
-      
       // Use gene bounds without extra padding
       viewStart = this.geneBounds.start
       viewEnd = this.geneBounds.end
       
       // Include transcript features if they extend beyond gene bounds
       if (dataRange.fmin < viewStart) {
-        console.log('⬅️ Extending viewStart for transcripts:', {
-          oldViewStart: viewStart,
-          newViewStart: dataRange.fmin,
-        })
         viewStart = dataRange.fmin
       }
       if (dataRange.fmax > viewEnd) {
-        console.log('➡️ Extending viewEnd for transcripts:', {
-          oldViewEnd: viewEnd,
-          newViewEnd: dataRange.fmax,
-        })
         viewEnd = dataRange.fmax
       }
-      
-      console.log('📍 After applying gene bounds:', {
-        finalViewStart: viewStart,
-        finalViewEnd: viewEnd,
-        finalViewWidth: viewEnd - viewStart,
-      })
-    } else {
-      console.log('⚠️ No gene bounds provided!')
     }
 
     // constants
@@ -205,22 +155,6 @@ export default class IsoformAndVariantTrack {
     const LABEL_PADDING = 22.5
 
     const x = d3.scaleLinear().domain([viewStart, viewEnd]).range([0, width])
-    
-    console.log('📐 D3 Scale created:', {
-      domain: [viewStart, viewEnd],
-      range: [0, width],
-      viewStart,
-      viewEnd,
-      width,
-      geneBounds: this.geneBounds,
-      testMapping: {
-        viewStart: x(viewStart),
-        viewEnd: x(viewEnd),
-        midpoint: x((viewStart + viewEnd) / 2),
-        geneStart: this.geneBounds ? x(this.geneBounds.start) : 'N/A',
-        geneEnd: this.geneBounds ? x(this.geneBounds.end) : 'N/A',
-      },
-    })
 
     // Lets put this here so that the "track" part will give us extra space automagically
     const deletionTrack = viewer
@@ -717,16 +651,6 @@ export default class IsoformAndVariantTrack {
 
               const transcriptX = x(featureChild.fmin)
               const transcriptWidth = x(featureChild.fmax) - x(featureChild.fmin)
-              
-              console.log('🎨 Rendering transcript backbone:', {
-                name: featureChild.name,
-                fmin: featureChild.fmin,
-                fmax: featureChild.fmax,
-                x_position: transcriptX,
-                width: transcriptWidth,
-                scale_domain: x.domain(),
-                scale_range: x.range(),
-              })
               
               isoform
                 .append('rect')

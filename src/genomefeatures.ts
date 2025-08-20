@@ -22,6 +22,9 @@ interface Track {
   label?: string
   variantData?: VariantFeature[]
   trackData?: SimpleFeatureSerialized[]
+  geneBounds?: { start: number; end: number }
+  geneSymbol?: string
+  geneId?: string
 }
 
 interface ViewerConfig {
@@ -71,13 +74,6 @@ export class GenomeFeatureViewer {
     width: number,
     height: number,
   ) {
-    console.log('GenomeFeatureViewer constructor called with:', {
-      config,
-      svg_target,
-      width,
-      height,
-      tracks: config.tracks,
-    })
     this.height = height
     this.width = width
     this.config = config
@@ -209,9 +205,9 @@ export class GenomeFeatureViewer {
           variantFilter,
           binRatio,
           isoformFilter,
-          geneBounds: (track as any).geneBounds,
-          geneSymbol: (track as any).geneSymbol,
-          geneId: (track as any).geneId,
+          geneBounds: track.geneBounds,
+          geneSymbol: track.geneSymbol,
+          geneId: track.geneId,
         })
         trackHeight += isoformVariantTrack.DrawTrack()
       } else if (track.type === TRACK_TYPE.ISOFORM_EMBEDDED_VARIANT) {
