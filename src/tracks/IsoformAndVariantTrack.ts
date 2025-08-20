@@ -122,13 +122,6 @@ export default class IsoformAndVariantTrack {
     let viewStart = dataRange.fmin
     let viewEnd = dataRange.fmax
     
-    console.log('IsoformAndVariantTrack - Initial bounds:', {
-      dataRange,
-      geneBounds: this.geneBounds,
-      geneSymbol: this.geneSymbol,
-      geneId: this.geneId
-    })
-    
     // If we have gene bounds from the API, use them to constrain the view
     if (this.geneBounds) {
       // Use gene bounds without extra padding
@@ -142,16 +135,6 @@ export default class IsoformAndVariantTrack {
       if (dataRange.fmax > viewEnd) {
         viewEnd = dataRange.fmax
       }
-      
-      console.log('IsoformAndVariantTrack - Adjusted bounds with geneBounds:', {
-        viewStart,
-        viewEnd,
-        adjustment: {
-          usedGeneBoundsStart: viewStart === this.geneBounds.start,
-          usedGeneBoundsEnd: viewEnd === this.geneBounds.end,
-          extendedByTranscripts: dataRange.fmin < this.geneBounds.start || dataRange.fmax > this.geneBounds.end
-        }
-      })
     }
 
     // constants
@@ -507,7 +490,6 @@ export default class IsoformAndVariantTrack {
             alleles: variant_alleles,
           })
       } else {
-        console.warn('type not found', type, variant)
         drawnVariant = false
       }
 
@@ -592,13 +574,6 @@ export default class IsoformAndVariantTrack {
             const endsAfterGene = featureChild.fmax > this.geneBounds.end
             
             if (startsBeforeGene && endsAfterGene) {
-              console.log('Skipping spanning transcript in render:', {
-                name: featureChild.name,
-                transcriptStart: featureChild.fmin,
-                transcriptEnd: featureChild.fmax,
-                geneBoundsStart: this.geneBounds.start,
-                geneBoundsEnd: this.geneBounds.end
-              })
               return // Skip rendering this transcript
             }
           }
@@ -737,11 +712,11 @@ export default class IsoformAndVariantTrack {
               try {
                 text_width = text_label.node()?.getBBox().width ?? 0
               } catch (e) {
-                // console.error('Not yet rendered',e)
+                // Bounding box not yet available
               }
               // First check to see if label goes past the end
               if (Number(text_width + x(featureChild.fmin)) > width) {
-                // console.error(featureChild.name + " goes over the edge");
+                // Label extends beyond viewer width
               }
               const feat_end =
                 text_width > x(featureChild.fmax) - x(featureChild.fmin)
@@ -940,12 +915,7 @@ export default class IsoformAndVariantTrack {
           }
         })
       } catch (e) {
-        console.error(
-          'error processing filter with so returning anyway',
-          variantFilter,
-          v,
-          e,
-        )
+        // Error processing filter, return the variant anyway to avoid data loss
         returnVal = true
       }
       return returnVal

@@ -57,15 +57,6 @@ export function findRange(
   let fmax = -1
   const extremeFeatures: Array<{name: string, type: string, fmin: number, fmax: number}> = []
   
-  console.log('findRange - Input:', {
-    dataLength: data.length,
-    display_feats,
-    geneBounds,
-    geneSymbol,
-    geneId,
-    dataFeatures: data.map(d => ({ name: d.name, id: d.id, type: d.type, fmin: d.fmin, fmax: d.fmax }))
-  })
-  
   // If no gene filtering is provided, process all data (this is the case for allele pages)
   // The allele page already has filtered data specific to the gene
   if (!geneSymbol && !geneId) {
@@ -89,7 +80,6 @@ export function findRange(
       }
     }
     
-    console.log('findRange - No gene filtering, using all data. Result:', { fmin, fmax })
     return { fmin, fmax }
   }
   
@@ -106,13 +96,11 @@ export function findRange(
     
     if (geneMatches) {
       targetGenes.push(feature)
-      console.log('findRange - Found matching gene:', { name: feature.name, id: feature.id })
     }
   }
   
   // Check if we found any matching genes
   if (targetGenes.length === 0) {
-    console.warn('findRange - No matching genes found for:', { geneSymbol, geneId })
     // Fall back to processing all data if no matches found
     for (const feature of data) {
       const featureChildren = feature.children
@@ -133,7 +121,6 @@ export function findRange(
       }
     }
     
-    console.log('findRange - Fallback to all data. Result:', { fmin, fmax })
     return { fmin, fmax }
   }
 
@@ -151,15 +138,6 @@ export function findRange(
             const endsAfterGene = featureChild.fmax > geneBounds.end
             
             if (startsBeforeGene && endsAfterGene) {
-              console.log('Filtering out spanning transcript:', {
-                name: featureChild.name,
-                type: featureChild.type,
-                transcriptStart: featureChild.fmin,
-                transcriptEnd: featureChild.fmax,
-                geneBoundsStart: geneBounds.start,
-                geneBoundsEnd: geneBounds.end,
-                reason: 'spans_beyond_both_gene_boundaries'
-              })
               return // Skip this transcript
             }
           }
@@ -183,14 +161,6 @@ export function findRange(
       }) // transcript level
     } // gene level
   }
-
-  // Features that extended the range have been tracked in extremeFeatures for debugging if needed
-  console.log('findRange - Final result for target genes:', { 
-    fmin, 
-    fmax, 
-    targetGenesCount: targetGenes.length,
-    extremeFeatures 
-  })
 
   return {
     fmin: fmin,
