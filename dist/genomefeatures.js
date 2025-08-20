@@ -2851,7 +2851,7 @@ class Ru {
     const i = this.initialHighlight, r = this.filterVariantData(
       this.variantData,
       this.variantFilter
-    ), a = this.viewer, s = this.width, o = this.binRatio, c = Nu(r), f = c.length, u = this.trackData[0].source, g = this.trackData[0].seqId, d = e.length === 0 ? 9 : 30, p = ["UTR", "five_prime_UTR", "three_prime_UTR"], v = ["CDS"], C = ["exon"], D = this.transcriptTypes, S = gs(n, D, this.geneBounds, this.geneSymbol, this.geneId);
+    ), a = this.viewer, s = this.width, o = this.binRatio, c = Nu(r), f = c.length, u = this.trackData[0].source, g = this.trackData[0].seqId, d = !e || e.length === 0 ? 9 : 30, p = ["UTR", "five_prime_UTR", "three_prime_UTR"], v = ["CDS"], C = ["exon"], D = this.transcriptTypes, S = gs(n, D, this.geneBounds, this.geneSymbol, this.geneId);
     let T = S.fmin, k = S.fmax;
     this.geneBounds && (T = this.geneBounds.start, k = this.geneBounds.end, S.fmin < T && (T = S.fmin), S.fmax > k && (k = S.fmax));
     const x = 10, A = 10, $ = 40, E = 20, B = 2, F = 0, L = 10, b = 10, Z = 4, V = 20, K = 10, nt = `0,0 0,${V} ${K},${K}`, ft = 10, W = 40, j = 22.5, U = he().domain([T, k]).range([0, s]), rt = a.append("g").attr("class", "deletions track").attr("transform", "translate(0,35)"), Rt = a.append("g").attr("class", "label"), J = {};
@@ -3049,7 +3049,7 @@ class Ru {
         let zt = !1;
         ct.forEach((P) => {
           var vt;
-          if (!(e.includes(P.id) || e.includes(P.name)) && e.length !== 0)
+          if (e && e.length !== 0 && !(e.includes(P.id) || e.includes(P.name)))
             return;
           if (this.geneBounds) {
             const mt = P.fmin < this.geneBounds.start, m = P.fmax > this.geneBounds.end;

@@ -111,7 +111,7 @@ export default class IsoformAndVariantTrack {
     const numVariantTracks = distinctVariants.length
     const source = this.trackData[0].source
     const chr = this.trackData[0].seqId
-    const MAX_ROWS = isoformFilter.length === 0 ? 9 : 30
+    const MAX_ROWS = !isoformFilter || isoformFilter.length === 0 ? 9 : 30
 
     const UTR_feats = ['UTR', 'five_prime_UTR', 'three_prime_UTR']
     const CDS_feats = ['CDS']
@@ -598,11 +598,12 @@ export default class IsoformAndVariantTrack {
         let warningRendered = false
         featureChildren.forEach(featureChild => {
           if (
+            isoformFilter &&
+            isoformFilter.length !== 0 &&
             !(
               isoformFilter.includes(featureChild.id) ||
               isoformFilter.includes(featureChild.name)
-            ) &&
-            isoformFilter.length !== 0
+            )
           ) {
             return
           }
