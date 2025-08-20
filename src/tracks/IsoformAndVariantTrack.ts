@@ -959,7 +959,7 @@ export default class IsoformAndVariantTrack {
   }
 
   filterVariantData(variantData: VariantFeature[], variantFilter: string[]) {
-    if (variantFilter.length === 0) {
+    if (!variantFilter || variantFilter.length === 0) {
       return variantData
     }
     return variantData.filter(v => {

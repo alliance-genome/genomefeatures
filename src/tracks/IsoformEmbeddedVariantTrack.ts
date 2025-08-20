@@ -693,7 +693,7 @@ export default class IsoformEmbeddedVariantTrack {
     variantData: VariantFeature[],
     variantFilter: string[],
   ): VariantFeature[] {
-    if (variantFilter.length === 0) {
+    if (!variantFilter || variantFilter.length === 0) {
       return variantData
     }
 

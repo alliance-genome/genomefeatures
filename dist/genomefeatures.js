@@ -3220,7 +3220,7 @@ class Ru {
     ), st * $ + St + W;
   }
   filterVariantData(e, n) {
-    return n.length === 0 ? e : e.filter((i) => {
+    return !n || n.length === 0 ? e : e.filter((i) => {
       var a, s, o, c;
       let r = !1;
       try {
@@ -3506,7 +3506,7 @@ class Mu {
     return ut * x + pt;
   }
   filterVariantData(e, n) {
-    if (n.length === 0)
+    if (!n || n.length === 0)
       return e;
     const i = new Set(n);
     return e.filter((a) => {
