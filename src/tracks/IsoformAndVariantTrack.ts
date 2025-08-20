@@ -550,9 +550,12 @@ export default class IsoformAndVariantTrack {
 
         // May want to remove this and add an external sort function
         // outside of the render method to put certain features on top.
-        featureChildren = featureChildren.sort((a, b) =>
-          a.name.localeCompare(b.name),
-        )
+        featureChildren = featureChildren.sort((a, b) => {
+          // Handle cases where name might be undefined
+          const aName = a.name || '';
+          const bName = b.name || '';
+          return aName.localeCompare(bName);
+        })
 
         // For each isoform..
         let warningRendered = false
@@ -772,7 +775,10 @@ export default class IsoformAndVariantTrack {
                     return 1
                   }
                   // NOTE: type not found and weighted
-                  return a.type.localeCompare(b.type)
+                  // Handle cases where type might be undefined
+                  const aType = a.type || '';
+                  const bType = b.type || '';
+                  return aType.localeCompare(bType)
                 })
 
                 featureChild.children.forEach(innerChild => {

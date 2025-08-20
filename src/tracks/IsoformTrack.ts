@@ -375,7 +375,10 @@ export default class IsoformTrack {
                       return 1
                     }
                     // NOTE: type not found and weighted
-                    return a.type.localeCompare(b.type)
+                    // Handle cases where type might be undefined
+                    const aType = a.type || '';
+                    const bType = b.type || '';
+                    return aType.localeCompare(bType)
                   },
                 )
 
