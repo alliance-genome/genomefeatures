@@ -567,6 +567,24 @@ export default class IsoformAndVariantTrack {
           ) {
             return
           }
+          
+          // Filter out transcripts that span beyond both gene boundaries
+          // These create ugly gray bars without showing useful information
+          if (this.geneBounds) {
+            const startsBeforeGene = featureChild.fmin < this.geneBounds.start
+            const endsAfterGene = featureChild.fmax > this.geneBounds.end
+            
+            if (startsBeforeGene && endsAfterGene) {
+              console.log('Skipping spanning transcript in render:', {
+                name: featureChild.name,
+                transcriptStart: featureChild.fmin,
+                transcriptEnd: featureChild.fmax,
+                geneBoundsStart: this.geneBounds.start,
+                geneBoundsEnd: this.geneBounds.end
+              })
+              return // Skip rendering this transcript
+            }
+          }
 
           if (alreadyRendered.includes(featureChild.id)) {
             return

@@ -96,6 +96,27 @@ export function findRange(
     if (featureChildren) {
       featureChildren.forEach(featureChild => {
         if (display_feats.includes(featureChild.type)) {
+          
+          // Filter out transcripts that start before and end after the target gene bounds
+          // These create ugly gray bars that span the entire view without showing useful boundaries
+          if (geneBounds) {
+            const startsBeforeGene = featureChild.fmin < geneBounds.start
+            const endsAfterGene = featureChild.fmax > geneBounds.end
+            
+            if (startsBeforeGene && endsAfterGene) {
+              console.log('Filtering out spanning transcript:', {
+                name: featureChild.name,
+                type: featureChild.type,
+                transcriptStart: featureChild.fmin,
+                transcriptEnd: featureChild.fmax,
+                geneBoundsStart: geneBounds.start,
+                geneBoundsEnd: geneBounds.end,
+                reason: 'spans_beyond_both_gene_boundaries'
+              })
+              return // Skip this transcript
+            }
+          }
+          
           // Update fmin if we find something earlier
           if (fmin < 0 || featureChild.fmin < fmin) {
             fmin = featureChild.fmin
