@@ -369,7 +369,7 @@ export function renderVariantDescription(description: VariantDescription) {
     change = `${ref_allele}->${alt_allele}`
   }
   returnString += `<table class="tooltip-table"><tbody>`
-  returnString += `<tr><th>Symbol</th><td>${description.symbolDetail}</td></tr>`
+  returnString += `<tr><th>Symbol</th><td style="word-break: break-all; max-width: 600px;">${description.symbolDetail}</td></tr>`
   returnString += `<tr><th>Type</th><td>${description.type}</td></tr>`
   returnString += `<tr><th>Consequence</th><td>${description.consequence}</td></tr>`
   if (description.impact) {
@@ -377,7 +377,7 @@ export function renderVariantDescription(description: VariantDescription) {
   }
   returnString += `<tr><th>Length</th><td>${length}</td></tr>`
   if (description.name !== description.symbol) {
-    returnString += `<tr><th>Name</th><td>${description.name}</td></tr>`
+    returnString += `<tr><th>Name</th><td style="word-break: break-all; max-width: 600px;">${description.name}</td></tr>`
   }
   if (description.geneId && description.geneSymbol) {
     returnString += `<tr><th>Allele of Genes</th><td> ${description.geneSymbol.length > descriptionWidth ? description.geneSymbol.slice(0, Math.max(0, descriptionWidth)) : description.geneSymbol} (${description.geneId})</td></tr>`
