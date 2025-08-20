@@ -587,7 +587,7 @@ export default class IsoformAndVariantTrack {
           })
         } catch (error) {
           console.error('ERROR sorting feature children:', {
-            error: error.message,
+            error: error instanceof Error ? error.message : String(error),
             feature: feature.name,
             children: featureChildren
           });
@@ -840,8 +840,8 @@ export default class IsoformAndVariantTrack {
                   })
                 } catch (error) {
                   console.error('ERROR sorting exons/CDS:', {
-                    error: error.message,
-                    stack: error.stack,
+                    error: error instanceof Error ? error.message : String(error),
+                    stack: error instanceof Error ? error.stack : undefined,
                     parent: featureChild.name,
                     children: featureChild.children
                   });

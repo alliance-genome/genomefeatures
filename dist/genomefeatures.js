@@ -3041,7 +3041,7 @@ class Ru {
           });
         } catch (P) {
           console.error("ERROR sorting feature children:", {
-            error: P.message,
+            error: P instanceof Error ? P.message : String(P),
             feature: dt.name,
             children: ct
           });
@@ -3164,8 +3164,8 @@ class Ru {
                   });
                 } catch (l) {
                   console.error("ERROR sorting exons/CDS:", {
-                    error: l.message,
-                    stack: l.stack,
+                    error: l instanceof Error ? l.message : String(l),
+                    stack: l instanceof Error ? l.stack : void 0,
                     parent: P.name,
                     children: P.children
                   });
