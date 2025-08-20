@@ -176,6 +176,20 @@ export default class IsoformAndVariantTrack {
 
     const geneList = {} as Record<string, string>
 
+    console.log('IsoformAndVariantTrack DEBUG - Pre-sort isoformData:', {
+      count: isoformData.length,
+      data: isoformData.map(d => ({
+        name: d.name,
+        id: d.id,
+        type: d.type,
+        fmin: d.fmin,
+        fmax: d.fmax,
+        selected: d.selected,
+        hasChildren: !!d.children,
+        childrenCount: d.children ? d.children.length : 0
+      }))
+    });
+
     // Sort by genomic position instead of alphabetically
     // This ensures genes are displayed in their natural chromosomal order
     // and prevents the primary gene from being pushed out of view by alphabetically earlier genes
@@ -548,14 +562,37 @@ export default class IsoformAndVariantTrack {
       if (featureChildren) {
         const selected = feature.selected
 
+        console.log('IsoformAndVariantTrack DEBUG - Before children sort:', {
+          featureName: feature.name,
+          featureId: feature.id,
+          childrenCount: featureChildren.length,
+          children: featureChildren.map(c => ({
+            name: c.name,
+            type: c.type,
+            id: c.id,
+            hasName: c.name !== undefined,
+            nameType: typeof c.name
+          }))
+        });
+
         // May want to remove this and add an external sort function
         // outside of the render method to put certain features on top.
-        featureChildren = featureChildren.sort((a, b) => {
-          // Handle cases where name might be undefined
-          const aName = a.name || '';
-          const bName = b.name || '';
-          return aName.localeCompare(bName);
-        })
+        try {
+          featureChildren = featureChildren.sort((a, b) => {
+            // Handle cases where name might be undefined
+            const aName = a.name || '';
+            const bName = b.name || '';
+            console.log('Sorting children:', { aName, bName, aHasName: !!a.name, bHasName: !!b.name });
+            return aName.localeCompare(bName);
+          })
+        } catch (error) {
+          console.error('ERROR sorting feature children:', {
+            error: error.message,
+            feature: feature.name,
+            children: featureChildren
+          });
+          // Don't sort if there's an error
+        }
 
         // For each isoform..
         let warningRendered = false
@@ -752,34 +789,62 @@ export default class IsoformAndVariantTrack {
 
               // have to sort this so we draw the exons BEFORE the CDS
               if (featureChild.children) {
-                featureChild.children = featureChild.children.sort((a, b) => {
-                  const sortAValue = sortWeight[a.type]
-                  const sortBValue = sortWeight[b.type]
+                console.log('IsoformAndVariantTrack DEBUG - Before exon/CDS sort:', {
+                  parentName: featureChild.name,
+                  childrenCount: featureChild.children.length,
+                  children: featureChild.children.map(c => ({
+                    type: c.type,
+                    hasType: c.type !== undefined,
+                    typeType: typeof c.type,
+                    sortWeight: sortWeight[c.type] || 'no-weight'
+                  }))
+                });
 
-                  if (
-                    typeof sortAValue === 'number' &&
-                    typeof sortBValue === 'number'
-                  ) {
-                    return sortAValue - sortBValue
-                  }
-                  if (
-                    typeof sortAValue === 'number' &&
-                    typeof sortBValue !== 'number'
-                  ) {
-                    return -1
-                  }
-                  if (
-                    typeof sortAValue !== 'number' &&
-                    typeof sortBValue === 'number'
-                  ) {
-                    return 1
-                  }
-                  // NOTE: type not found and weighted
-                  // Handle cases where type might be undefined
-                  const aType = a.type || '';
-                  const bType = b.type || '';
-                  return aType.localeCompare(bType)
-                })
+                try {
+                  featureChild.children = featureChild.children.sort((a, b) => {
+                    const sortAValue = sortWeight[a.type]
+                    const sortBValue = sortWeight[b.type]
+
+                    if (
+                      typeof sortAValue === 'number' &&
+                      typeof sortBValue === 'number'
+                    ) {
+                      return sortAValue - sortBValue
+                    }
+                    if (
+                      typeof sortAValue === 'number' &&
+                      typeof sortBValue !== 'number'
+                    ) {
+                      return -1
+                    }
+                    if (
+                      typeof sortAValue !== 'number' &&
+                      typeof sortBValue === 'number'
+                    ) {
+                      return 1
+                    }
+                    // NOTE: type not found and weighted
+                    // Handle cases where type might be undefined
+                    const aType = a.type || '';
+                    const bType = b.type || '';
+                    console.log('Exon/CDS sort comparison:', { 
+                      aType, 
+                      bType, 
+                      aHasType: a.type !== undefined, 
+                      bHasType: b.type !== undefined,
+                      aTypeType: typeof a.type,
+                      bTypeType: typeof b.type
+                    });
+                    return aType.localeCompare(bType)
+                  })
+                } catch (error) {
+                  console.error('ERROR sorting exons/CDS:', {
+                    error: error.message,
+                    stack: error.stack,
+                    parent: featureChild.name,
+                    children: featureChild.children
+                  });
+                }
 
                 featureChild.children.forEach(innerChild => {
                   const innerType = innerChild.type
