@@ -124,17 +124,8 @@ export default class IsoformAndVariantTrack {
     const width = this.width
     const binRatio = this.binRatio
     
-    console.log('IsoformAndVariantTrack.DrawTrack() - Getting variant track positions');
     const distinctVariants = getVariantTrackPositions(variantData)
     const numVariantTracks = distinctVariants.length
-    
-    console.log('IsoformAndVariantTrack.DrawTrack() - Accessing trackData[0]', {
-      trackData: this.trackData,
-      hasTrackData: !!this.trackData,
-      trackDataLength: this.trackData ? this.trackData.length : 'UNDEFINED',
-      hasFirstElement: this.trackData && this.trackData.length > 0,
-      firstElement: this.trackData && this.trackData[0] ? this.trackData[0] : 'NO FIRST ELEMENT'
-    });
     
     if (!this.trackData || !Array.isArray(this.trackData) || this.trackData.length === 0) {
       console.error('IsoformAndVariantTrack.DrawTrack() - CRITICAL: trackData is invalid!', {

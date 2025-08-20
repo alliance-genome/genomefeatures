@@ -74,35 +74,12 @@ export class GenomeFeatureViewer {
     width: number,
     height: number,
   ) {
-    console.log('GenomeFeatureViewer CONSTRUCTOR START', {
-      configKeys: config ? Object.keys(config) : 'CONFIG IS NULL/UNDEFINED',
-      svg_target,
-      width,
-      height,
-      hasConfig: !!config,
-      hasTracks: config && config.tracks ? config.tracks.length : 'NO TRACKS',
-      hasRegion: config && config.region ? true : false
-    });
-    
-    try {
-      this.height = height
-      this.width = width
-      this.config = config
-      this.svg_target = svg_target
-      console.log('GenomeFeatureViewer - About to init viewer');
-      this.viewer = this._initViewer(svg_target)
-      console.log('GenomeFeatureViewer - Viewer initialized, about to draw');
-      this.draw()
-      console.log('GenomeFeatureViewer - Draw completed successfully');
-    } catch (error) {
-      console.error('GenomeFeatureViewer CONSTRUCTOR ERROR:', {
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        at: 'constructor',
-        config
-      });
-      throw error;
-    }
+    this.height = height
+    this.width = width
+    this.config = config
+    this.svg_target = svg_target
+    this.viewer = this._initViewer(svg_target)
+    this.draw()
   }
 
   generateLegend() {
@@ -173,31 +150,13 @@ export class GenomeFeatureViewer {
   }
 
   draw() {
-    console.log('GenomeFeatureViewer.draw() START', {
-      configExists: !!this.config,
-      configKeys: this.config ? Object.keys(this.config) : [],
-      width: this.width,
-      height: this.height
-    });
-    
     const width = this.width
     const transcriptTypes =
       this.config.transcriptTypes ?? defaultTranscriptTypes
     const variantTypes = this.config.variantTypes ?? defaultVariantTypes
     const binRatio = this.config.binRatio ?? 0.01
 
-    console.log('GenomeFeatureViewer.draw() - Getting region', {
-      hasRegion: !!this.config.region,
-      region: this.config.region
-    });
-    
     const region = this.config.region
-    
-    console.log('GenomeFeatureViewer.draw() - Configuring range', {
-      regionStart: region?.start,
-      regionEnd: region?.end,
-      width
-    });
     
     const sequenceOptions = this._configureRange(
       region.start,
@@ -206,13 +165,6 @@ export class GenomeFeatureViewer {
     )
     const range = sequenceOptions.range
     const chromosome = region.chromosome
-    
-    console.log('GenomeFeatureViewer.draw() - Processing filters', {
-      variantFilter: this.config.variantFilter,
-      variantFilterLength: this.config.variantFilter ? this.config.variantFilter.length : 'UNDEFINED',
-      isoformFilter: this.config.isoformFilter,
-      isoformFilterLength: this.config.isoformFilter ? this.config.isoformFilter.length : 'UNDEFINED'
-    });
     
     const variantFilter = this.config.variantFilter ?? []
     const isoformFilter = this.config.isoformFilter ?? []
@@ -239,43 +191,13 @@ export class GenomeFeatureViewer {
 
     const showVariantLabel = this.config.showVariantLabel ?? true
     
-    console.log('GenomeFeatureViewer.draw() - About to process tracks', {
-      tracks: this.tracks,
-      tracksIsArray: Array.isArray(this.tracks),
-      tracksLength: this.tracks ? this.tracks.length : 'TRACKS IS UNDEFINED/NULL',
-      configTracks: this.config.tracks,
-      configTracksIsArray: Array.isArray(this.config.tracks),
-      configTracksLength: this.config.tracks ? this.config.tracks.length : 'CONFIG.TRACKS IS UNDEFINED/NULL'
-    });
-    
     const { viewer, genome, height, tracks } = this
     
-    console.log('GenomeFeatureViewer.draw() - After destructuring', {
-      hasViewer: !!viewer,
-      hasGenome: !!genome,
-      height,
-      tracks,
-      tracksType: typeof tracks,
-      tracksIsArray: Array.isArray(tracks),
-      tracksLength: tracks ? tracks.length : 'UNDEFINED'
-    });
-    
     if (!tracks || !Array.isArray(tracks)) {
-      console.error('GenomeFeatureViewer.draw() - CRITICAL: tracks is not an array!', {
-        tracks,
-        type: typeof tracks,
-        config: this.config
-      });
       throw new Error(`Tracks must be an array, got: ${typeof tracks}`);
     }
     
     tracks.map(track => {
-      console.log('GenomeFeatureViewer.draw() - Processing track', {
-        trackType: track.type,
-        hasVariantData: !!track.variantData,
-        hasTrackData: !!track.trackData,
-        track
-      });
       const { variantData, trackData } = track
 
       if (track.type === TRACK_TYPE.ISOFORM_AND_VARIANT) {
