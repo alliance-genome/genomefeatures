@@ -96,19 +96,56 @@ export default class IsoformAndVariantTrack {
   }
 
   DrawTrack() {
+    console.log('IsoformAndVariantTrack.DrawTrack() START', {
+      hasTrackData: !!this.trackData,
+      trackDataType: typeof this.trackData,
+      trackDataIsArray: Array.isArray(this.trackData),
+      trackDataLength: this.trackData ? this.trackData.length : 'UNDEFINED',
+      hasVariantData: !!this.variantData,
+      variantDataLength: this.variantData ? this.variantData.length : 'UNDEFINED',
+      isoformFilter: this.isoformFilter,
+      variantFilter: this.variantFilter
+    });
+    
     const isoformFilter = this.isoformFilter
     let isoformData = this.trackData
     const initialHighlight = this.initialHighlight
+    
+    console.log('IsoformAndVariantTrack.DrawTrack() - About to filter variant data');
     const variantData = this.filterVariantData(
       this.variantData,
       this.variantFilter,
     )
+    console.log('IsoformAndVariantTrack.DrawTrack() - Variant data filtered', {
+      filteredLength: variantData ? variantData.length : 'UNDEFINED'
+    });
     
     const viewer = this.viewer
     const width = this.width
     const binRatio = this.binRatio
+    
+    console.log('IsoformAndVariantTrack.DrawTrack() - Getting variant track positions');
     const distinctVariants = getVariantTrackPositions(variantData)
     const numVariantTracks = distinctVariants.length
+    
+    console.log('IsoformAndVariantTrack.DrawTrack() - Accessing trackData[0]', {
+      trackData: this.trackData,
+      hasTrackData: !!this.trackData,
+      trackDataLength: this.trackData ? this.trackData.length : 'UNDEFINED',
+      hasFirstElement: this.trackData && this.trackData.length > 0,
+      firstElement: this.trackData && this.trackData[0] ? this.trackData[0] : 'NO FIRST ELEMENT'
+    });
+    
+    if (!this.trackData || !Array.isArray(this.trackData) || this.trackData.length === 0) {
+      console.error('IsoformAndVariantTrack.DrawTrack() - CRITICAL: trackData is invalid!', {
+        trackData: this.trackData,
+        type: typeof this.trackData,
+        isArray: Array.isArray(this.trackData),
+        length: this.trackData ? this.trackData.length : 'UNDEFINED'
+      });
+      throw new Error('trackData must be a non-empty array');
+    }
+    
     const source = this.trackData[0].source
     const chr = this.trackData[0].seqId
     const MAX_ROWS = !isoformFilter || isoformFilter.length === 0 ? 9 : 30
@@ -960,9 +997,30 @@ export default class IsoformAndVariantTrack {
   }
 
   filterVariantData(variantData: VariantFeature[], variantFilter: string[]) {
+    console.log('IsoformAndVariantTrack.filterVariantData() START', {
+      hasVariantData: !!variantData,
+      variantDataType: typeof variantData,
+      variantDataIsArray: Array.isArray(variantData),
+      variantDataLength: variantData ? variantData.length : 'UNDEFINED',
+      hasVariantFilter: !!variantFilter,
+      variantFilterType: typeof variantFilter,
+      variantFilterIsArray: Array.isArray(variantFilter),
+      variantFilterLength: variantFilter ? variantFilter.length : 'UNDEFINED'
+    });
+    
     if (!variantFilter || variantFilter.length === 0) {
+      console.log('IsoformAndVariantTrack.filterVariantData() - No filter, returning all data');
       return variantData
     }
+    
+    if (!variantData || !Array.isArray(variantData)) {
+      console.error('IsoformAndVariantTrack.filterVariantData() - Invalid variantData!', {
+        variantData,
+        type: typeof variantData
+      });
+      return [];
+    }
+    
     return variantData.filter(v => {
       let returnVal = false
       try {
