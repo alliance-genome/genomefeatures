@@ -759,7 +759,22 @@ export default class IsoformAndVariantTrack {
                   fmax: featureChild.fmax,
                 })
 
-              text_string = featureChild.name
+              console.log('DEBUG - About to set text_string:', {
+                featureChildName: featureChild.name,
+                hasName: featureChild.name !== undefined,
+                nameType: typeof featureChild.name,
+                featureChildId: featureChild.id,
+                featureType: featureChild.type
+              });
+              
+              text_string = featureChild.name || ''
+              
+              console.log('DEBUG - text_string set to:', {
+                text_string,
+                text_string_length: text_string.length,
+                isEmpty: text_string === ''
+              });
+              
               text_label = isoform
                 .append('text')
                 .attr('class', 'transcriptLabel')
@@ -783,6 +798,11 @@ export default class IsoformAndVariantTrack {
               // that this new element is taking up making sure to add in the
               // width of the box.
               // TODO: this is just an estimate of the length
+              console.log('DEBUG - About to calculate text_width:', {
+                text_string,
+                hasLength: text_string !== undefined && text_string !== null,
+                willCalculate: text_string.length * 2
+              });
               let text_width = text_string.length * 2
 
               // not some instances (as in reactjs?) the bounding box isn't
