@@ -103,4 +103,13 @@ export declare function getVariantDescription(variant: VariantBin): {
 export declare function getVariantSymbolDetail(variant: VariantBin): string | undefined;
 export declare function getVariantSymbol(variant: VariantBin): string;
 export declare function getVariantTrackPositions(variantData: VariantFeature[]): string[];
+type VariantBinWithPixels = VariantBin & {
+    pixelFmin?: number;
+    pixelFmax?: number;
+};
+export declare function calculateVariantTrackLayout(variantBins: VariantBinWithPixels[], pixelBuffer?: number): {
+    variant: VariantBinWithPixels;
+    row: number;
+    type: string;
+}[];
 export {};
