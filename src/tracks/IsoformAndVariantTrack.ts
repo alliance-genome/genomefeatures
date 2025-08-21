@@ -21,6 +21,7 @@ import {
   getVariantDescriptions,
   getVariantSymbol,
   getVariantTrackPositions,
+  calculateVariantTrackLayout,
   renderVariantDescriptions,
 } from '../services/VariantService'
 
@@ -106,12 +107,14 @@ export default class IsoformAndVariantTrack {
       this.variantFilter,
     )
     
+    
     const viewer = this.viewer
     const width = this.width
     const binRatio = this.binRatio
     
+    // We'll calculate the actual number of variant tracks later based on the layout
     const distinctVariants = getVariantTrackPositions(variantData)
-    const numVariantTracks = distinctVariants.length
+    let numVariantTracks = distinctVariants.length
     
     if (!this.trackData || !Array.isArray(this.trackData) || this.trackData.length === 0) {
       throw new Error('trackData must be a non-empty array')
@@ -154,6 +157,7 @@ export default class IsoformAndVariantTrack {
     const ISOFORM_TITLE_HEIGHT = 0 // height for each isoform
     const UTR_HEIGHT = 10 // this is the height of the isoform running all of the way through
     const VARIANT_HEIGHT = 10 // this is the height of the isoform running all of the way through
+    const VARIANT_TRACK_SPACING = 5 // vertical spacing between variant tracks for better clickability
     const TRANSCRIPT_BACKBONE_HEIGHT = 4 // this is the height of the isoform running all of the way through
     const ARROW_HEIGHT = 20
     const ARROW_WIDTH = 10
@@ -223,6 +227,25 @@ export default class IsoformAndVariantTrack {
       (viewEnd - viewStart) * binRatio,
     )
 
+    // Check if we have no variant data and add a message if needed
+    const hasNoVariants = !variantData || variantData.length === 0
+    if (hasNoVariants) {
+      // Add a message about missing variant data
+      const variantMessageTrack = viewer
+        .append('g')
+        .attr('class', 'variant-message track')
+        .attr('transform', 'translate(0,5)')
+      
+      variantMessageTrack
+        .append('text')
+        .attr('x', 10)
+        .attr('y', 15)
+        .attr('fill', '#d9534f')
+        .attr('opacity', 0.8)
+        .attr('font-size', '12px')
+        .text('No variant data available for this region. Please contact help@alliancegenome.org if this is unexpected.')
+    }
+
     // We need to do all of the deletions first...
     const deletionBins = variantBins.filter(v => v.type === 'deletion')
     const otherBins = variantBins.filter(v => v.type !== 'deletion')
@@ -238,6 +261,14 @@ export default class IsoformAndVariantTrack {
       const variant_alleles = getVariantAlleles(variant)
       const descriptionHtml = renderVariantDescriptions(descriptions)
       const consequenceColor = getColorsForConsequences(descriptions)[0]
+      console.log('PROCESSING DELETION:', {
+        fmin,
+        fmax,
+        symbol_string,
+        variant_alleles,
+        variantId: symbol_string + fmin,
+        originalVariant: variant
+      })
 
       // Function to determine what row this goes on... not working yet.
       deletionSpace.push({
@@ -247,28 +278,45 @@ export default class IsoformAndVariantTrack {
       })
 
       const width = Math.max(Math.ceil(x(fmax) - x(fmin)), MIN_WIDTH)
-      deletionTrack
+      const deletionRect = deletionTrack
         .append('rect')
         .attr('class', 'variant-deletion')
         .attr('id', `variant-${fmin}`)
         .attr('x', x(fmin))
         .attr(
           'transform',
-          `translate(0,${VARIANT_HEIGHT * getDeletionHeight(deletionSpace, fmin, fmax)})`,
+          `translate(0,${(VARIANT_HEIGHT + VARIANT_TRACK_SPACING) * getDeletionHeight(deletionSpace, fmin, fmax)})`,
         )
         .attr('z-index', 30)
         .attr('fill', consequenceColor)
         .attr('height', VARIANT_HEIGHT)
         .attr('width', width)
         .on('click', () => {
+          console.log('DELETION CLICK DEBUG:', {
+            fmin,
+            fmax,
+            symbol_string,
+            variant_alleles,
+            deletionRow: getDeletionHeight(deletionSpace, fmin, fmax),
+            descriptions,
+            consequenceColor
+          })
           renderTooltipDescription(tooltipDiv, descriptionHtml, closeToolTip)
         })
         .on('mouseover', d => {
           const theVariant = d.variant
+          console.log('DELETION MOUSEOVER DEBUG:', {
+            hoveredVariant: theVariant,
+            datum: d,
+            allDeletions: d3.selectAll('.variant-deletion').nodes().length
+          })
           d3.selectAll<SVGGElement, { variant: VariantFeature }>(
             '.variant-deletion',
           )
-            .filter(d => d.variant === theVariant)
+            .filter(d => {
+              console.log('  Filtering deletion:', d.variant, 'vs', theVariant, 'match:', d.variant === theVariant)
+              return d.variant === theVariant
+            })
             .style('stroke', 'black')
 
           d3.select('.label')
@@ -293,6 +341,28 @@ export default class IsoformAndVariantTrack {
           variant: symbol_string + fmin,
           alleles: variant_alleles,
         })
+      
+      const currentDeletionRow = getDeletionHeight(deletionSpace, fmin, fmax)
+      
+      // Check the rect element after creation
+      const rectNode = deletionRect.node()
+      console.log('DELETION RECT CREATED:', {
+        fmin,
+        fmax,
+        variantId: symbol_string + fmin,
+        alleles: variant_alleles,
+        deletionRow: currentDeletionRow,
+        deletionSpaceLength: deletionSpace.length,
+        isThirdDeletion: deletionSpace.length === 3 && currentDeletionRow === 2,
+        hasAlleles: variant_alleles && variant_alleles.length > 0,
+        allelesEmpty: variant_alleles?.length === 0,
+        rectExists: !!rectNode,
+        rectId: rectNode?.id,
+        rectClass: rectNode?.className?.baseVal,
+        transform: rectNode?.getAttribute('transform'),
+        xPos: rectNode?.getAttribute('x'),
+        yPos: (VARIANT_HEIGHT + VARIANT_TRACK_SPACING) * currentDeletionRow
+      })
 
       // drawnVariant = false;//disable labels for now;
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -301,7 +371,7 @@ export default class IsoformAndVariantTrack {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         label_offset = isPoints ? x(fmin) - SNV_WIDTH / 2 : x(fmin)
 
-        const label_height = VARIANT_HEIGHT * numVariantTracks + LABEL_PADDING
+        const label_height = (VARIANT_HEIGHT + VARIANT_TRACK_SPACING) * numVariantTracks + LABEL_PADDING
         const variant_label = labelTrack
           .append('text')
           .attr('class', 'variantLabel')
@@ -335,6 +405,35 @@ export default class IsoformAndVariantTrack {
       .attr('class', 'variants track')
       .attr('transform', `translate(0,${variantTrackAdjust})`)
 
+    // Calculate variant layout with overlap detection
+    // Convert pixel positions to base positions for overlap detection
+    const variantBinsWithPixelPositions = otherBins.map(v => ({
+      ...v,
+      pixelFmin: x(v.fmin),
+      pixelFmax: x(v.fmax)
+    }))
+    
+    // Use pixel buffer to detect overlaps (15 pixels should be enough for click separation)
+    const variantLayout = calculateVariantTrackLayout(variantBinsWithPixelPositions, 15)
+    
+    // Calculate the actual number of variant tracks needed
+    let maxVariantRow = 0
+    variantLayout.forEach(item => {
+      if (item.row > maxVariantRow) {
+        maxVariantRow = item.row
+      }
+    })
+    // Add 1 because rows are 0-indexed
+    // We'll update this after processing deletions
+    numVariantTracks = Math.max(maxVariantRow + 1, 1)
+    
+    // Create a map for quick lookup of row positions
+    const variantRowMap = new Map()
+    variantLayout.forEach(item => {
+      const key = `${item.variant.fmin}-${item.type}`
+      variantRowMap.set(key, item.row)
+    })
+
     otherBins.forEach(variant => {
       const { type, fmax, fmin } = variant
       let drawnVariant = true
@@ -350,6 +449,8 @@ export default class IsoformAndVariantTrack {
         type.toLowerCase() === 'point_mutation'
       ) {
         isPoints = true
+        // Get the calculated row for this variant
+        const variantRow = variantRowMap.get(`${fmin}-snv`) || 0
         variantContainer
           .append('polygon')
           .attr('class', 'variant-SNV')
@@ -359,7 +460,7 @@ export default class IsoformAndVariantTrack {
           .attr('x', x(fmin))
           .attr(
             'transform',
-            `translate(0,${VARIANT_HEIGHT * distinctVariants.indexOf('snv')})`,
+            `translate(0,${(VARIANT_HEIGHT + VARIANT_TRACK_SPACING) * variantRow})`,
           )
           .attr('z-index', 30)
           .on('click', () => {
@@ -396,6 +497,8 @@ export default class IsoformAndVariantTrack {
           })
       } else if (type.toLowerCase() === 'insertion') {
         isPoints = true
+        // Get the calculated row for this variant
+        const variantRow = variantRowMap.get(`${fmin}-insertion`) || 0
         variantContainer
           .append('polygon')
           .attr('class', 'variant-insertion')
@@ -405,9 +508,7 @@ export default class IsoformAndVariantTrack {
           .attr('x', x(fmin))
           .attr(
             'transform',
-            `translate(0,${
-              VARIANT_HEIGHT * distinctVariants.indexOf('insertion')
-            })`,
+            `translate(0,${(VARIANT_HEIGHT + VARIANT_TRACK_SPACING) * variantRow})`,
           )
           .attr('z-index', 30)
           .on('click', () => {
@@ -451,6 +552,8 @@ export default class IsoformAndVariantTrack {
         type.toLowerCase() === 'mnv'
       ) {
         isPoints = true
+        // Get the calculated row for this variant
+        const variantRow = variantRowMap.get(`${fmin}-delins`) || 0
         variantContainer
           .append('polygon')
           .attr('class', 'variant-delins')
@@ -459,9 +562,7 @@ export default class IsoformAndVariantTrack {
           .attr('x', x(fmin))
           .attr(
             'transform',
-            `translate(0,${
-              VARIANT_HEIGHT * distinctVariants.indexOf('delins')
-            })`,
+            `translate(0,${(VARIANT_HEIGHT + VARIANT_TRACK_SPACING) * variantRow})`,
           )
           .attr('fill', consequenceColor)
           .attr('z-index', 30)
@@ -505,7 +606,7 @@ export default class IsoformAndVariantTrack {
         let label_offset = 0
         label_offset = isPoints ? x(fmin) - SNV_WIDTH / 2 : x(fmin)
 
-        const label_height = VARIANT_HEIGHT * numVariantTracks + LABEL_PADDING
+        const label_height = (VARIANT_HEIGHT + VARIANT_TRACK_SPACING) * numVariantTracks + LABEL_PADDING
         const variant_label = labelTrack
           .append('text')
           .attr('class', 'variantLabel')
@@ -898,8 +999,10 @@ export default class IsoformAndVariantTrack {
           'Overview of non-coding genome features unavailable at this time.',
         )
     }
+    // Calculate total variant track height dynamically based on actual tracks used
+    const totalVariantHeight = numVariantTracks * (VARIANT_HEIGHT + VARIANT_TRACK_SPACING) + LABEL_PADDING
     // we return the appropriate height function
-    return row_count * ISOFORM_HEIGHT + heightBuffer + VARIANT_TRACK_HEIGHT
+    return row_count * ISOFORM_HEIGHT + heightBuffer + totalVariantHeight
   }
 
   filterVariantData(variantData: VariantFeature[], variantFilter: string[]) {
@@ -914,31 +1017,28 @@ export default class IsoformAndVariantTrack {
     
     return variantData.filter(v => {
       let returnVal = false
-      try {
-        if (
-          variantFilter.includes(v.name) ||
-          (v.allele_symbols?.values &&
-            variantFilter.includes(
-              v.allele_symbols.values[0].replace(/"/g, ''),
-            )) ||
-          (v.symbol?.values &&
-            variantFilter.includes(v.symbol.values[0].replace(/"/g, ''))) ||
-          (v.symbol_text?.values &&
-            variantFilter.includes(v.symbol_text.values[0].replace(/"/g, '')))
-        ) {
-          returnVal = true
-        }
-        const ids =
-          v.allele_ids?.values[0].replace(/"|\[|\]| /g, '').split(',') ?? []
-        ids.forEach(id => {
-          if (variantFilter.includes(id)) {
-            returnVal = true
-          }
-        })
-      } catch (e) {
-        // Error processing filter, return the variant anyway to avoid data loss
+      
+      if (
+        variantFilter.includes(v.name) ||
+        (v.allele_symbols?.values &&
+          variantFilter.includes(
+            v.allele_symbols.values[0].replace(/"/g, ''),
+          )) ||
+        (v.symbol?.values &&
+          variantFilter.includes(v.symbol.values[0].replace(/"/g, ''))) ||
+        (v.symbol_text?.values &&
+          variantFilter.includes(v.symbol_text.values[0].replace(/"/g, '')))
+      ) {
         returnVal = true
       }
+      const ids =
+        v.allele_ids?.values[0]?.replace(/"|\[|\]| /g, '').split(',') ?? []
+      ids.forEach(id => {
+        if (variantFilter.includes(id)) {
+          returnVal = true
+        }
+      })
+      
       return returnVal
     })
   }
