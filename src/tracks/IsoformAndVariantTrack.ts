@@ -291,7 +291,8 @@ export default class IsoformAndVariantTrack {
         .attr('fill', consequenceColor)
         .attr('height', VARIANT_HEIGHT)
         .attr('width', width)
-        .on('click', () => {
+        .on('click', function(event) {
+          const clickedData = d3.select(this).datum() as any
           console.log('DELETION CLICK DEBUG:', {
             fmin,
             fmax,
@@ -299,15 +300,19 @@ export default class IsoformAndVariantTrack {
             variant_alleles,
             deletionRow: getDeletionHeight(deletionSpace, fmin, fmax),
             descriptions,
-            consequenceColor
+            consequenceColor,
+            clickedData,
+            element: this
           })
           renderTooltipDescription(tooltipDiv, descriptionHtml, closeToolTip)
         })
-        .on('mouseover', d => {
+        .on('mouseover', function(event) {
+          const d = d3.select(this).datum() as any
           const theVariant = d.variant
           console.log('DELETION MOUSEOVER DEBUG:', {
             hoveredVariant: theVariant,
             datum: d,
+            element: this,
             allDeletions: d3.selectAll('.variant-deletion').nodes().length
           })
           d3.selectAll<SVGGElement, { variant: VariantFeature }>(
@@ -327,7 +332,7 @@ export default class IsoformAndVariantTrack {
             .filter(d => d.variant === theVariant)
             .style('opacity', 1)
         })
-        .on('mouseout', () => {
+        .on('mouseout', function(event) {
           d3.selectAll<SVGGElement, { selected: string }>('.variant-deletion')
             .filter(d => d.selected !== 'true')
             .style('stroke', null)
@@ -466,7 +471,8 @@ export default class IsoformAndVariantTrack {
           .on('click', () => {
             renderTooltipDescription(tooltipDiv, descriptionHtml, closeToolTip)
           })
-          .on('mouseover', function (d) {
+          .on('mouseover', function (event) {
+            const d = d3.select(this).datum() as any
             const theVariant = d.variant
             d3.selectAll<SVGGElement, { variant: VariantFeature }>(
               '.variant-SNV',
@@ -514,7 +520,8 @@ export default class IsoformAndVariantTrack {
           .on('click', () => {
             renderTooltipDescription(tooltipDiv, descriptionHtml, closeToolTip)
           })
-          .on('mouseover', d => {
+          .on('mouseover', function(event) {
+            const d = d3.select(this).datum() as any
             const theVariant = d.variant
             d3.selectAll<SVGGElement, { variant: VariantFeature }>(
               '.variant-insertion',
@@ -569,7 +576,8 @@ export default class IsoformAndVariantTrack {
           .on('click', () => {
             renderTooltipDescription(tooltipDiv, descriptionHtml, closeToolTip)
           })
-          .on('mouseover', d => {
+          .on('mouseover', function(event) {
+            const d = d3.select(this).datum() as any
             const theVariant = d.variant
             d3.selectAll<SVGGElement, { variant: VariantFeature }>(
               '.variant-delins',
