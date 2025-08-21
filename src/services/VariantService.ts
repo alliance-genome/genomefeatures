@@ -406,13 +406,6 @@ export function getVariantDescriptions(variant: VariantBin) {
 
 export function getVariantAlleles(variant: VariantBin) {
   // Add null safety check for variant.variants
-  console.log('GET_VARIANT_ALLELES DEBUG:', {
-    variant,
-    hasVariants: !!variant.variants,
-    variantsLength: variant.variants?.length,
-    firstVariant: variant.variants?.[0],
-    alleleIds: variant.variants?.[0]?.allele_ids
-  })
   return (variant.variants ?? [])
     .flatMap(val => {
       // Try to parse JSON if it's a stringified array

@@ -261,20 +261,13 @@ export default class IsoformAndVariantTrack {
       const variant_alleles = getVariantAlleles(variant)
       const descriptionHtml = renderVariantDescriptions(descriptions)
       const consequenceColor = getColorsForConsequences(descriptions)[0]
-      console.log('PROCESSING DELETION:', {
-        fmin,
-        fmax,
-        symbol_string,
-        variant_alleles,
-        variantId: symbol_string + fmin,
-        originalVariant: variant
-      })
 
       // Function to determine what row this goes on... not working yet.
+      const deletionRow = getDeletionHeight(deletionSpace, fmin, fmax)
       deletionSpace.push({
         fmin: fmin,
         fmax: fmax,
-        row: getDeletionHeight(deletionSpace, fmin, fmax),
+        row: deletionRow,
       })
 
       const width = Math.max(Math.ceil(x(fmax) - x(fmin)), MIN_WIDTH)
@@ -285,41 +278,22 @@ export default class IsoformAndVariantTrack {
         .attr('x', x(fmin))
         .attr(
           'transform',
-          `translate(0,${(VARIANT_HEIGHT + VARIANT_TRACK_SPACING) * getDeletionHeight(deletionSpace, fmin, fmax)})`,
+          `translate(0,${(VARIANT_HEIGHT + VARIANT_TRACK_SPACING) * deletionRow})`,
         )
         .attr('z-index', 30)
         .attr('fill', consequenceColor)
         .attr('height', VARIANT_HEIGHT)
         .attr('width', width)
         .on('click', function(event) {
-          const clickedData = d3.select(this).datum() as any
-          console.log('DELETION CLICK DEBUG:', {
-            fmin,
-            fmax,
-            symbol_string,
-            variant_alleles,
-            deletionRow: getDeletionHeight(deletionSpace, fmin, fmax),
-            descriptions,
-            consequenceColor,
-            clickedData,
-            element: this
-          })
           renderTooltipDescription(tooltipDiv, descriptionHtml, closeToolTip)
         })
         .on('mouseover', function(event) {
           const d = d3.select(this).datum() as any
           const theVariant = d.variant
-          console.log('DELETION MOUSEOVER DEBUG:', {
-            hoveredVariant: theVariant,
-            datum: d,
-            element: this,
-            allDeletions: d3.selectAll('.variant-deletion').nodes().length
-          })
           d3.selectAll<SVGGElement, { variant: VariantFeature }>(
             '.variant-deletion',
           )
             .filter(d => {
-              console.log('  Filtering deletion:', d.variant, 'vs', theVariant, 'match:', d.variant === theVariant)
               return d.variant === theVariant
             })
             .style('stroke', 'black')
@@ -347,27 +321,6 @@ export default class IsoformAndVariantTrack {
           alleles: variant_alleles,
         })
       
-      const currentDeletionRow = getDeletionHeight(deletionSpace, fmin, fmax)
-      
-      // Check the rect element after creation
-      const rectNode = deletionRect.node()
-      console.log('DELETION RECT CREATED:', {
-        fmin,
-        fmax,
-        variantId: symbol_string + fmin,
-        alleles: variant_alleles,
-        deletionRow: currentDeletionRow,
-        deletionSpaceLength: deletionSpace.length,
-        isThirdDeletion: deletionSpace.length === 3 && currentDeletionRow === 2,
-        hasAlleles: variant_alleles && variant_alleles.length > 0,
-        allelesEmpty: variant_alleles?.length === 0,
-        rectExists: !!rectNode,
-        rectId: rectNode?.id,
-        rectClass: rectNode?.className?.baseVal,
-        transform: rectNode?.getAttribute('transform'),
-        xPos: rectNode?.getAttribute('x'),
-        yPos: (VARIANT_HEIGHT + VARIANT_TRACK_SPACING) * currentDeletionRow
-      })
 
       // drawnVariant = false;//disable labels for now;
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
