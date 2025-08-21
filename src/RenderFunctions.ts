@@ -55,7 +55,7 @@ export function findRange(
 ) {
   let fmin = -1
   let fmax = -1
-  const extremeFeatures: Array<{name: string, type: string, fmin: number, fmax: number}> = []
+  const extremeFeatures: {name: string, type: string, fmin: number, fmax: number}[] = []
   
   // If no gene filtering is provided, process all data (this is the case for allele pages)
   // The allele page already has filtered data specific to the gene

@@ -96,29 +96,15 @@ export default class IsoformAndVariantTrack {
   }
 
   DrawTrack() {
-    console.log('IsoformAndVariantTrack.DrawTrack() START', {
-      hasTrackData: !!this.trackData,
-      trackDataType: typeof this.trackData,
-      trackDataIsArray: Array.isArray(this.trackData),
-      trackDataLength: this.trackData ? this.trackData.length : 'UNDEFINED',
-      hasVariantData: !!this.variantData,
-      variantDataLength: this.variantData ? this.variantData.length : 'UNDEFINED',
-      isoformFilter: this.isoformFilter,
-      variantFilter: this.variantFilter
-    });
     
     const isoformFilter = this.isoformFilter
     let isoformData = this.trackData
     const initialHighlight = this.initialHighlight
     
-    console.log('IsoformAndVariantTrack.DrawTrack() - About to filter variant data');
     const variantData = this.filterVariantData(
       this.variantData,
       this.variantFilter,
     )
-    console.log('IsoformAndVariantTrack.DrawTrack() - Variant data filtered', {
-      filteredLength: variantData ? variantData.length : 'UNDEFINED'
-    });
     
     const viewer = this.viewer
     const width = this.width
@@ -128,13 +114,7 @@ export default class IsoformAndVariantTrack {
     const numVariantTracks = distinctVariants.length
     
     if (!this.trackData || !Array.isArray(this.trackData) || this.trackData.length === 0) {
-      console.error('IsoformAndVariantTrack.DrawTrack() - CRITICAL: trackData is invalid!', {
-        trackData: this.trackData,
-        type: typeof this.trackData,
-        isArray: Array.isArray(this.trackData),
-        length: this.trackData ? this.trackData.length : 'UNDEFINED'
-      });
-      throw new Error('trackData must be a non-empty array');
+      throw new Error('trackData must be a non-empty array')
     }
     
     const source = this.trackData[0].source
@@ -203,20 +183,6 @@ export default class IsoformAndVariantTrack {
     }
 
     const geneList = {} as Record<string, string>
-
-    console.log('IsoformAndVariantTrack DEBUG - Pre-sort isoformData:', {
-      count: isoformData.length,
-      data: isoformData.map(d => ({
-        name: d.name,
-        id: d.id,
-        type: d.type,
-        fmin: d.fmin,
-        fmax: d.fmax,
-        selected: d.selected,
-        hasChildren: !!d.children,
-        childrenCount: d.children ? d.children.length : 0
-      }))
-    });
 
     // Sort by genomic position instead of alphabetically
     // This ensures genes are displayed in their natural chromosomal order
@@ -590,37 +556,14 @@ export default class IsoformAndVariantTrack {
       if (featureChildren) {
         const selected = feature.selected
 
-        console.log('IsoformAndVariantTrack DEBUG - Before children sort:', {
-          featureName: feature.name,
-          featureId: feature.id,
-          childrenCount: featureChildren.length,
-          children: featureChildren.map(c => ({
-            name: c.name,
-            type: c.type,
-            id: c.id,
-            hasName: c.name !== undefined,
-            nameType: typeof c.name
-          }))
-        });
-
         // May want to remove this and add an external sort function
         // outside of the render method to put certain features on top.
-        try {
-          featureChildren = featureChildren.sort((a, b) => {
-            // Handle cases where name might be undefined
-            const aName = a.name || '';
-            const bName = b.name || '';
-            console.log('Sorting children:', { aName, bName, aHasName: !!a.name, bHasName: !!b.name });
-            return aName.localeCompare(bName);
-          })
-        } catch (error) {
-          console.error('ERROR sorting feature children:', {
-            error: error instanceof Error ? error.message : String(error),
-            feature: feature.name,
-            children: featureChildren
-          });
-          // Don't sort if there's an error
-        }
+        // Sort transcripts by name
+        featureChildren = featureChildren.sort((a, b) => {
+          const aName = a.name || ''
+          const bName = b.name || ''
+          return aName.localeCompare(bName)
+        })
 
         // For each isoform..
         let warningRendered = false
@@ -749,22 +692,8 @@ export default class IsoformAndVariantTrack {
                   fmin: featureChild.fmin,
                   fmax: featureChild.fmax,
                 })
-
-              console.log('DEBUG - About to set text_string:', {
-                featureChildName: featureChild.name,
-                hasName: featureChild.name !== undefined,
-                nameType: typeof featureChild.name,
-                featureChildId: featureChild.id,
-                featureType: featureChild.type
-              });
               
               text_string = featureChild.name || ''
-              
-              console.log('DEBUG - text_string set to:', {
-                text_string,
-                text_string_length: text_string.length,
-                isEmpty: text_string === ''
-              });
               
               text_label = isoform
                 .append('text')
@@ -789,11 +718,6 @@ export default class IsoformAndVariantTrack {
               // that this new element is taking up making sure to add in the
               // width of the box.
               // TODO: this is just an estimate of the length
-              console.log('DEBUG - About to calculate text_width:', {
-                text_string,
-                hasLength: text_string !== undefined && text_string !== null,
-                willCalculate: text_string.length * 2
-              });
               let text_width = text_string.length * 2
 
               // not some instances (as in reactjs?) the bounding box isn't
@@ -838,62 +762,33 @@ export default class IsoformAndVariantTrack {
 
               // have to sort this so we draw the exons BEFORE the CDS
               if (featureChild.children) {
-                console.log('IsoformAndVariantTrack DEBUG - Before exon/CDS sort:', {
-                  parentName: featureChild.name,
-                  childrenCount: featureChild.children.length,
-                  children: featureChild.children.map(c => ({
-                    type: c.type,
-                    hasType: c.type !== undefined,
-                    typeType: typeof c.type,
-                    sortWeight: sortWeight[c.type] || 'no-weight'
-                  }))
-                });
+                featureChild.children = featureChild.children.sort((a, b) => {
+                  const sortAValue = sortWeight[a.type]
+                  const sortBValue = sortWeight[b.type]
 
-                try {
-                  featureChild.children = featureChild.children.sort((a, b) => {
-                    const sortAValue = sortWeight[a.type]
-                    const sortBValue = sortWeight[b.type]
-
-                    if (
-                      typeof sortAValue === 'number' &&
-                      typeof sortBValue === 'number'
-                    ) {
-                      return sortAValue - sortBValue
-                    }
-                    if (
-                      typeof sortAValue === 'number' &&
-                      typeof sortBValue !== 'number'
-                    ) {
-                      return -1
-                    }
-                    if (
-                      typeof sortAValue !== 'number' &&
-                      typeof sortBValue === 'number'
-                    ) {
-                      return 1
-                    }
-                    // NOTE: type not found and weighted
-                    // Handle cases where type might be undefined
-                    const aType = a.type || '';
-                    const bType = b.type || '';
-                    console.log('Exon/CDS sort comparison:', { 
-                      aType, 
-                      bType, 
-                      aHasType: a.type !== undefined, 
-                      bHasType: b.type !== undefined,
-                      aTypeType: typeof a.type,
-                      bTypeType: typeof b.type
-                    });
-                    return aType.localeCompare(bType)
-                  })
-                } catch (error) {
-                  console.error('ERROR sorting exons/CDS:', {
-                    error: error instanceof Error ? error.message : String(error),
-                    stack: error instanceof Error ? error.stack : undefined,
-                    parent: featureChild.name,
-                    children: featureChild.children
-                  });
-                }
+                  if (
+                    typeof sortAValue === 'number' &&
+                    typeof sortBValue === 'number'
+                  ) {
+                    return sortAValue - sortBValue
+                  }
+                  if (
+                    typeof sortAValue === 'number' &&
+                    typeof sortBValue !== 'number'
+                  ) {
+                    return -1
+                  }
+                  if (
+                    typeof sortAValue !== 'number' &&
+                    typeof sortBValue === 'number'
+                  ) {
+                    return 1
+                  }
+                  // NOTE: type not found and weighted
+                  const aType = a.type || ''
+                  const bType = b.type || ''
+                  return aType.localeCompare(bType)
+                })
 
                 featureChild.children.forEach(innerChild => {
                   const innerType = innerChild.type
@@ -1008,28 +903,13 @@ export default class IsoformAndVariantTrack {
   }
 
   filterVariantData(variantData: VariantFeature[], variantFilter: string[]) {
-    console.log('IsoformAndVariantTrack.filterVariantData() START', {
-      hasVariantData: !!variantData,
-      variantDataType: typeof variantData,
-      variantDataIsArray: Array.isArray(variantData),
-      variantDataLength: variantData ? variantData.length : 'UNDEFINED',
-      hasVariantFilter: !!variantFilter,
-      variantFilterType: typeof variantFilter,
-      variantFilterIsArray: Array.isArray(variantFilter),
-      variantFilterLength: variantFilter ? variantFilter.length : 'UNDEFINED'
-    });
     
     if (!variantFilter || variantFilter.length === 0) {
-      console.log('IsoformAndVariantTrack.filterVariantData() - No filter, returning all data');
       return variantData
     }
     
     if (!variantData || !Array.isArray(variantData)) {
-      console.error('IsoformAndVariantTrack.filterVariantData() - Invalid variantData!', {
-        variantData,
-        type: typeof variantData
-      });
-      return [];
+      return []
     }
     
     return variantData.filter(v => {

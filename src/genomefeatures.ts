@@ -194,7 +194,7 @@ export class GenomeFeatureViewer {
     const { viewer, genome, height, tracks } = this
     
     if (!tracks || !Array.isArray(tracks)) {
-      throw new Error(`Tracks must be an array, got: ${typeof tracks}`);
+      throw new Error(`Tracks must be an array, got: ${typeof tracks}`)
     }
     
     tracks.map(track => {
