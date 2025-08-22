@@ -2981,10 +2981,10 @@ class Ru {
           St(_t, M, ut);
         }).on("mouseover", function(S) {
           const d = dt(this).datum();
-          d && (dt(this).style("stroke", "black").style("stroke-width", 3), dt(".label").selectAll(".variantLabel,.variantLabelBackground").filter((v) => v && v.variant === d.variant).style("opacity", 1).style("pointer-events", "auto").raise());
+          d && (dt(this).style("stroke", "black"), dt(".label").selectAll(".variantLabel,.variantLabelBackground").filter((v) => v && v.variant === d.variant).style("opacity", 1).style("pointer-events", "auto").raise());
         }).on("mouseout", function() {
           const S = dt(this).datum();
-          (!S || S.selected !== "true") && dt(this).style("stroke", null).style("stroke-width", 2), dt(".label").selectAll(".variantLabel,.variantLabelBackground").style("opacity", 0).style("pointer-events", "none");
+          (!S || S.selected !== "true") && dt(this).style("stroke", null), dt(".label").selectAll(".variantLabel,.variantLabelBackground").style("opacity", 0).style("pointer-events", "none");
         }).datum(l);
       } else
         X = !1;

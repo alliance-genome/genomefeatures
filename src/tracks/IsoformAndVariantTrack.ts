@@ -522,7 +522,6 @@ export default class IsoformAndVariantTrack {
             // Highlight this specific deletion rectangle
             d3.select(this)
               .style('stroke', 'black')
-              .style('stroke-width', 3)
             
             // Show label for this variant
             d3.select('.label')
@@ -537,7 +536,6 @@ export default class IsoformAndVariantTrack {
             if (!d || d.selected !== 'true') {
               d3.select(this)
                 .style('stroke', null)
-                .style('stroke-width', 2)
             }
             
             // Hide all labels
