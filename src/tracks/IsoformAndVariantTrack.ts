@@ -248,7 +248,6 @@ export default class IsoformAndVariantTrack {
 
     // Need to adjust for the label track being created already... but is below this track.
     const variantTrackAdjust = calculateNewTrackPosition(this.viewer)
-    console.log(`🔍 DEBUG: variantTrackAdjust=${variantTrackAdjust}`)
     const variantContainer = viewer
       .append('g')
       .attr('class', 'variants track')
@@ -262,21 +261,9 @@ export default class IsoformAndVariantTrack {
       pixelFmax: x(v.fmax)
     }))
     
-    console.log('🔍 DEBUG: variantBinsWithPixelPositions:', variantBinsWithPixelPositions)
-    console.log('🔍 DEBUG: Sample variant pixels:', variantBinsWithPixelPositions.slice(0, 3).map(v => ({
-      fmin: v.fmin,
-      fmax: v.fmax,
-      pixelFmin: v.pixelFmin,
-      pixelFmax: v.pixelFmax,
-      type: v.type
-    })))
-    
     // Use pixel buffer to detect overlaps (15 pixels should be enough for click separation)
     const variantLayout = calculateVariantTrackLayout(variantBinsWithPixelPositions, 15)
     
-    console.log('🔍 DEBUG: variantLayout result:', variantLayout)
-    console.log('🔍 DEBUG: variantLayout length:', variantLayout.length)
-    console.log('🔍 DEBUG: First few items:', variantLayout.slice(0, 5))
 
     // Calculate the actual number of variant tracks needed
     let maxVariantRow = 0
@@ -284,24 +271,18 @@ export default class IsoformAndVariantTrack {
       if (item.row > maxVariantRow) {
         maxVariantRow = item.row
       }
-      console.log(`🔍 DEBUG: Variant at ${item.variant.fmin}, type: ${item.type}, assigned row: ${item.row}`)
     })
     // Update the number of variant tracks
     numVariantTracks = Math.max(maxVariantRow + 1, 1)
     
-    console.log('🔍 DEBUG: maxVariantRow:', maxVariantRow)
-    console.log('🔍 DEBUG: numVariantTracks set to:', numVariantTracks)
 
     // Create a map for quick lookup of row positions
     const variantRowMap = new Map()
     variantLayout.forEach(item => {
       const key = `${item.variant.fmin}-${item.type.toLowerCase()}`
       variantRowMap.set(key, item.row)
-      console.log(`🔍 DEBUG: Setting variantRowMap['${key}'] = ${item.row}`)
     })
     
-    console.log('🔍 DEBUG: variantRowMap size:', variantRowMap.size)
-    console.log('🔍 DEBUG: variantRowMap entries:', Array.from(variantRowMap.entries()))
 
     // Create separate groups for each row to ensure proper event isolation
     // Create from bottom to top so higher rows naturally render on top
@@ -354,8 +335,6 @@ export default class IsoformAndVariantTrack {
         isPoints = true
         // Get the calculated row for this variant
         const variantRow = variantRowMap.get(`${fmin}-snv`) || 0
-        console.log(`🎯 DEBUG SNV: fmin=${fmin}, key='${fmin}-snv'`)
-        console.log(`    variantRow=${variantRow}`)
         
         // Use the row group instead of individual transform
         const targetGroup = rowGroups[variantRow] || variantContainer
@@ -518,16 +497,6 @@ export default class IsoformAndVariantTrack {
           selected: false
         }
         
-        console.log(`🎯 DEBUG DELETION ${variantIndex}:`)
-        console.log(`    Symbol: ${symbol_string}`)
-        console.log(`    fmin=${fmin}, fmax=${fmax}`)
-        console.log(`    Map key='${fmin}-deletion'`)
-        console.log(`    Retrieved row=${variantRow}`)
-        console.log(`    Pixel X: ${x(fmin)} to ${x(fmax)}`)
-        console.log(`    Width: ${width}px (min 5px for visibility)`)
-        console.log(`    Height: ${VARIANT_HEIGHT}px`)
-        console.log(`    Row group: ${variantRow}`)
-        console.log(`    Datum variant key: ${variantDatum.variant}`)
         
         // Use the row group for proper isolation
         const targetGroup = rowGroups[variantRow] || variantContainer
@@ -578,13 +547,6 @@ export default class IsoformAndVariantTrack {
               .style('pointer-events', 'none')  // Disable pointer events when hidden
           })
           .datum(variantDatum)
-        
-        // Log the actual rect properties after creation
-        const rectNode = deletionRect.node() as SVGRectElement
-        if (rectNode) {
-          const bbox = rectNode.getBBox()
-          console.log(`    Actual rect BBox: x=${bbox.x}, y=${bbox.y}, width=${bbox.width}, height=${bbox.height}`)
-        }
       } else {
         drawnVariant = false
       }
@@ -613,13 +575,6 @@ export default class IsoformAndVariantTrack {
         // Calculate label height based on the variant's row
         const label_height = (VARIANT_HEIGHT + VARIANT_TRACK_SPACING) * labelVariantRow + LABEL_PADDING
         
-        console.log(`  📝 Label for variant at ${fmin}:`)
-        console.log(`    Symbol: ${symbol_string}`)
-        console.log(`    Type: ${variantType}`)
-        console.log(`    Row: ${labelVariantRow}`)
-        console.log(`    Label X offset: ${label_offset} (${isDeletion ? 'after deletion end' : 'after variant start'})`)
-        console.log(`    Label Y height: ${label_height}`)
-        console.log(`    Label datum variant key: ${symbol_string + fmin}`)
         
         const variant_label = labelTrack
           .append('text')
@@ -639,7 +594,6 @@ export default class IsoformAndVariantTrack {
           // For deletions, position to the left of the deletion START, not END
           const leftPositionBase = isDeletion ? x(fmin) : variantXPos
           label_offset = leftPositionBase - symbol_string_width - labelOffsetFromVariant
-          console.log(`    📝 Label repositioned to left: ${label_offset}`)
           variant_label.attr('transform', `translate(${label_offset},${label_height})`)
         }
       }
