@@ -256,8 +256,11 @@ export function setHighlights(
       x_val = String(+x_val - width_val / 2)
     }
 
-    svgTarget
-      .select('.deletions.track')
+    // Find the variants track, or append directly to svgTarget if not found
+    const variantsTrack = svgTarget.select('.variants.track')
+    const targetElement = variantsTrack.empty() ? svgTarget : variantsTrack
+    
+    targetElement
       .append('rect')
       .attr('class', 'highlight')
       .attr('x', x_val)

@@ -168,11 +168,7 @@ export default class IsoformAndVariantTrack {
 
     const x = d3.scaleLinear().domain([viewStart, viewEnd]).range([0, width])
 
-    // Lets put this here so that the "track" part will give us extra space automagically
-    const deletionTrack = viewer
-      .append('g')
-      .attr('class', 'deletions track')
-      .attr('transform', 'translate(0,35)')
+    // REMOVED: Old deletionTrack - all variants now use single unified track
     const labelTrack = viewer.append('g').attr('class', 'label')
 
     const sortWeight = {} as Record<string, number>
@@ -246,118 +242,13 @@ export default class IsoformAndVariantTrack {
         .text('No variant data available for this region. Please contact help@alliancegenome.org if this is unexpected.')
     }
 
-    // We need to do all of the deletions first...
-    const deletionBins = variantBins.filter(v => v.type === 'deletion')
-    const otherBins = variantBins.filter(v => v.type !== 'deletion')
+    // Process ALL variants together through unified layout
+    const allBins = [...variantBins]
 
-    const deletionSpace = [] as { fmin: number; fmax: number; row: number }[] // Array of array of objects for deletion layout.
-    deletionBins.forEach(variant => {
-      const { fmax, fmin } = variant
-      const drawnVariant = true
-      const isPoints = false
-      const viewerWidth = this.width
-      const symbol_string = getVariantSymbol(variant)
-      const descriptions = getVariantDescriptions(variant)
-      const variant_alleles = getVariantAlleles(variant)
-      const descriptionHtml = renderVariantDescriptions(descriptions)
-      const consequenceColor = getColorsForConsequences(descriptions)[0]
-
-      // Function to determine what row this goes on... not working yet.
-      const deletionRow = getDeletionHeight(deletionSpace, fmin, fmax)
-      deletionSpace.push({
-        fmin: fmin,
-        fmax: fmax,
-        row: deletionRow,
-      })
-
-      const width = Math.max(Math.ceil(x(fmax) - x(fmin)), MIN_WIDTH)
-      const deletionRect = deletionTrack
-        .append('rect')
-        .attr('class', 'variant-deletion')
-        .attr('id', `variant-${fmin}`)
-        .attr('x', x(fmin))
-        .attr(
-          'transform',
-          `translate(0,${(VARIANT_HEIGHT + VARIANT_TRACK_SPACING) * deletionRow})`,
-        )
-        .attr('z-index', 30)
-        .attr('fill', consequenceColor)
-        .attr('height', VARIANT_HEIGHT)
-        .attr('width', width)
-        .on('click', function(event) {
-          renderTooltipDescription(tooltipDiv, descriptionHtml, closeToolTip)
-        })
-        .on('mouseover', function(event) {
-          const d = d3.select(this).datum() as any
-          const theVariant = d.variant
-          d3.selectAll<SVGGElement, { variant: VariantFeature }>(
-            '.variant-deletion',
-          )
-            .filter(d => {
-              return d.variant === theVariant
-            })
-            .style('stroke', 'black')
-
-          d3.select('.label')
-            .selectAll<SVGGElement, { variant: VariantFeature }>(
-              '.variantLabel,.variantLabelBackground',
-            )
-            .raise()
-            .filter(d => d.variant === theVariant)
-            .style('opacity', 1)
-        })
-        .on('mouseout', function(event) {
-          d3.selectAll<SVGGElement, { selected: string }>('.variant-deletion')
-            .filter(d => d.selected !== 'true')
-            .style('stroke', null)
-          d3.select('.label')
-            .selectAll('.variantLabel,.variantLabelBackground')
-            .style('opacity', 0)
-        })
-        .datum({
-          fmin: fmin,
-          fmax: fmax,
-          variant: symbol_string + fmin,
-          alleles: variant_alleles,
-        })
-      
-
-      // drawnVariant = false;//disable labels for now;
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      if (drawnVariant) {
-        let label_offset = 0
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        label_offset = isPoints ? x(fmin) - SNV_WIDTH / 2 : x(fmin)
-
-        const label_height = (VARIANT_HEIGHT + VARIANT_TRACK_SPACING) * numVariantTracks + LABEL_PADDING
-        const variant_label = labelTrack
-          .append('text')
-          .attr('class', 'variantLabel')
-          .attr('fill', consequenceColor)
-          .attr('opacity', 0)
-          .attr('height', ISOFORM_TITLE_HEIGHT)
-          .attr('transform', `translate(${label_offset},${label_height})`)
-          // if html, it cuts off the <sup> tag
-          .text(symbol_string)
-          .on('click', () => {
-            renderTooltipDescription(tooltipDiv, descriptionHtml, closeToolTip)
-          })
-          .datum({ fmin: fmin, variant: symbol_string + fmin })
-
-        const symbol_string_width = variant_label.node()?.getBBox().width ?? 0
-        if (symbol_string_width + label_offset > viewerWidth) {
-          const diff = symbol_string_width + label_offset - viewerWidth
-          label_offset -= diff
-          variant_label.attr(
-            'transform',
-            `translate(${label_offset},${label_height})`,
-          )
-        }
-      }
-    })
 
     // Need to adjust for the label track being created already... but is below this track.
     const variantTrackAdjust = calculateNewTrackPosition(this.viewer)
+    console.log(`🔍 DEBUG: variantTrackAdjust=${variantTrackAdjust}`)
     const variantContainer = viewer
       .append('g')
       .attr('class', 'variants track')
@@ -365,34 +256,88 @@ export default class IsoformAndVariantTrack {
 
     // Calculate variant layout with overlap detection
     // Convert pixel positions to base positions for overlap detection
-    const variantBinsWithPixelPositions = otherBins.map(v => ({
+    const variantBinsWithPixelPositions = allBins.map(v => ({
       ...v,
       pixelFmin: x(v.fmin),
       pixelFmax: x(v.fmax)
     }))
     
+    console.log('🔍 DEBUG: variantBinsWithPixelPositions:', variantBinsWithPixelPositions)
+    console.log('🔍 DEBUG: Sample variant pixels:', variantBinsWithPixelPositions.slice(0, 3).map(v => ({
+      fmin: v.fmin,
+      fmax: v.fmax,
+      pixelFmin: v.pixelFmin,
+      pixelFmax: v.pixelFmax,
+      type: v.type
+    })))
+    
     // Use pixel buffer to detect overlaps (15 pixels should be enough for click separation)
     const variantLayout = calculateVariantTrackLayout(variantBinsWithPixelPositions, 15)
     
+    console.log('🔍 DEBUG: variantLayout result:', variantLayout)
+    console.log('🔍 DEBUG: variantLayout length:', variantLayout.length)
+    console.log('🔍 DEBUG: First few items:', variantLayout.slice(0, 5))
+
     // Calculate the actual number of variant tracks needed
     let maxVariantRow = 0
     variantLayout.forEach(item => {
       if (item.row > maxVariantRow) {
         maxVariantRow = item.row
       }
+      console.log(`🔍 DEBUG: Variant at ${item.variant.fmin}, type: ${item.type}, assigned row: ${item.row}`)
     })
-    // Add 1 because rows are 0-indexed
-    // We'll update this after processing deletions
+    // Update the number of variant tracks
     numVariantTracks = Math.max(maxVariantRow + 1, 1)
     
+    console.log('🔍 DEBUG: maxVariantRow:', maxVariantRow)
+    console.log('🔍 DEBUG: numVariantTracks set to:', numVariantTracks)
+
     // Create a map for quick lookup of row positions
     const variantRowMap = new Map()
     variantLayout.forEach(item => {
-      const key = `${item.variant.fmin}-${item.type}`
+      const key = `${item.variant.fmin}-${item.type.toLowerCase()}`
       variantRowMap.set(key, item.row)
+      console.log(`🔍 DEBUG: Setting variantRowMap['${key}'] = ${item.row}`)
+    })
+    
+    console.log('🔍 DEBUG: variantRowMap size:', variantRowMap.size)
+    console.log('🔍 DEBUG: variantRowMap entries:', Array.from(variantRowMap.entries()))
+
+    // Create separate groups for each row to ensure proper event isolation
+    // Create from bottom to top so higher rows naturally render on top
+    const rowGroups: d3.Selection<SVGGElement, unknown, null, undefined>[] = []
+    for (let i = 0; i < numVariantTracks; i++) {
+      const rowGroup = variantContainer.append('g')
+        .attr('class', `variant-row-${i}`)
+        .attr('transform', `translate(0,${i * (VARIANT_HEIGHT + VARIANT_TRACK_SPACING)})`)
+        .style('pointer-events', 'all')
+        .style('isolation', 'isolate')  // CSS isolation to prevent event bubbling issues
+      rowGroups.push(rowGroup)
+    }
+    
+    // Reorder the groups so row 0 (visually on top) is last in DOM order (on top for events)
+    // Reverse order so row 0 is on top for event handling
+    for (let i = rowGroups.length - 1; i >= 0; i--) {
+      rowGroups[i].raise()  // This moves each group to the end, starting from the last
+    }
+    
+    // Sort variants by row ASCENDING so row 0 (visually on top) renders last (on top for events)
+    const sortedBins = [...allBins].sort((a, b) => {
+      const aType = a.type.toLowerCase()
+      const bType = b.type.toLowerCase()
+      const aKey = `${a.fmin}-${aType === 'snv' || aType === 'point_mutation' ? 'snv' : 
+                     aType === 'insertion' ? 'insertion' :
+                     aType === 'deletion' ? 'deletion' : 'delins'}`
+      const bKey = `${b.fmin}-${bType === 'snv' || bType === 'point_mutation' ? 'snv' : 
+                     bType === 'insertion' ? 'insertion' :
+                     bType === 'deletion' ? 'deletion' : 'delins'}`
+      const aRow = variantRowMap.get(aKey) || 0
+      const bRow = variantRowMap.get(bKey) || 0
+      // Sort ascending: Row 0 renders last so it's on top for events (matching visual hierarchy)
+      return aRow - bRow
     })
 
-    otherBins.forEach(variant => {
+    sortedBins.forEach((variant, variantIndex) => {
       const { type, fmax, fmin } = variant
       let drawnVariant = true
       let isPoints = false
@@ -409,44 +354,48 @@ export default class IsoformAndVariantTrack {
         isPoints = true
         // Get the calculated row for this variant
         const variantRow = variantRowMap.get(`${fmin}-snv`) || 0
-        variantContainer
+        console.log(`🎯 DEBUG SNV: fmin=${fmin}, key='${fmin}-snv'`)
+        console.log(`    variantRow=${variantRow}`)
+        
+        // Use the row group instead of individual transform
+        const targetGroup = rowGroups[variantRow] || variantContainer
+        targetGroup
           .append('polygon')
           .attr('class', 'variant-SNV')
           .attr('id', `variant-${fmin}`)
           .attr('points', generateSnvPoints(x(fmin)))
           .attr('fill', consequenceColor)
           .attr('x', x(fmin))
-          .attr(
-            'transform',
-            `translate(0,${(VARIANT_HEIGHT + VARIANT_TRACK_SPACING) * variantRow})`,
-          )
           .attr('z-index', 30)
           .on('click', () => {
             renderTooltipDescription(tooltipDiv, descriptionHtml, closeToolTip)
           })
           .on('mouseover', function (event) {
             const d = d3.select(this).datum() as any
-            const theVariant = d.variant
-            d3.selectAll<SVGGElement, { variant: VariantFeature }>(
-              '.variant-SNV',
-            )
-              .filter(d => d.variant === theVariant)
-              .style('stroke', 'black')
+            if (!d) return
+            
+            // Highlight this specific variant
+            d3.select(this).style('stroke', 'black')
+            
+            // Show label for this variant
             d3.select('.label')
-              .selectAll<SVGGElement, { variant: VariantFeature }>(
-                '.variantLabel,.variantLabelBackground',
-              )
-              .raise()
-              .filter(d => d.variant === theVariant)
+              .selectAll('.variantLabel,.variantLabelBackground')
+              .filter((labelData: any) => labelData && labelData.variant === d.variant)
               .style('opacity', 1)
+              .style('pointer-events', 'auto')  // Enable pointer events when visible
+              .raise()
           })
-          .on('mouseout', () => {
-            d3.selectAll<SVGGElement, { selected: string }>('.variant-SNV')
-              .filter(d => d.selected != 'true')
-              .style('stroke', null)
+          .on('mouseout', function () {
+            const d = d3.select(this).datum() as any
+            if (!d || d.selected !== 'true') {
+              d3.select(this).style('stroke', null)
+            }
+            
+            // Hide all labels
             d3.select('.label')
               .selectAll('.variantLabel,.variantLabelBackground')
               .style('opacity', 0)
+              .style('pointer-events', 'none')  // Disable pointer events when hidden
           })
           .datum({
             fmin: fmin,
@@ -458,46 +407,44 @@ export default class IsoformAndVariantTrack {
         isPoints = true
         // Get the calculated row for this variant
         const variantRow = variantRowMap.get(`${fmin}-insertion`) || 0
-        variantContainer
+        const targetGroup = rowGroups[variantRow] || variantContainer
+        targetGroup
           .append('polygon')
           .attr('class', 'variant-insertion')
           .attr('id', `variant-${fmin}`)
           .attr('points', generateInsertionPoint(x(fmin)))
           .attr('fill', consequenceColor)
           .attr('x', x(fmin))
-          .attr(
-            'transform',
-            `translate(0,${(VARIANT_HEIGHT + VARIANT_TRACK_SPACING) * variantRow})`,
-          )
           .attr('z-index', 30)
           .on('click', () => {
             renderTooltipDescription(tooltipDiv, descriptionHtml, closeToolTip)
           })
           .on('mouseover', function(event) {
             const d = d3.select(this).datum() as any
-            const theVariant = d.variant
-            d3.selectAll<SVGGElement, { variant: VariantFeature }>(
-              '.variant-insertion',
-            )
-              .filter(d => d.variant === theVariant)
-              .style('stroke', 'black')
+            if (!d) return
+            
+            // Highlight this specific variant
+            d3.select(this).style('stroke', 'black')
+            
+            // Show label for this variant
             d3.select('.label')
-              .selectAll<SVGGElement, { variant: VariantFeature }>(
-                '.variantLabel,.variantLabelBackground',
-              )
-              .raise()
-              .filter(d => d.variant === theVariant)
+              .selectAll('.variantLabel,.variantLabelBackground')
+              .filter((labelData: any) => labelData && labelData.variant === d.variant)
               .style('opacity', 1)
+              .style('pointer-events', 'auto')  // Enable pointer events when visible
+              .raise()
           })
-          .on('mouseout', () => {
-            d3.selectAll<SVGGElement, { selected: string }>(
-              '.variant-insertion',
-            )
-              .filter(d => d.selected != 'true')
-              .style('stroke', null)
+          .on('mouseout', function() {
+            const d = d3.select(this).datum() as any
+            if (!d || d.selected !== 'true') {
+              d3.select(this).style('stroke', null)
+            }
+            
+            // Hide all labels
             d3.select('.label')
               .selectAll('.variantLabel,.variantLabelBackground')
               .style('opacity', 0)
+              .style('pointer-events', 'none')  // Disable pointer events when hidden
           })
           .datum({
             fmin: fmin,
@@ -514,16 +461,13 @@ export default class IsoformAndVariantTrack {
         isPoints = true
         // Get the calculated row for this variant
         const variantRow = variantRowMap.get(`${fmin}-delins`) || 0
-        variantContainer
+        const targetGroup = rowGroups[variantRow] || variantContainer
+        targetGroup
           .append('polygon')
           .attr('class', 'variant-delins')
           .attr('id', `variant-${fmin}`)
           .attr('points', generateDelinsPoint(x(fmin)))
           .attr('x', x(fmin))
-          .attr(
-            'transform',
-            `translate(0,${(VARIANT_HEIGHT + VARIANT_TRACK_SPACING) * variantRow})`,
-          )
           .attr('fill', consequenceColor)
           .attr('z-index', 30)
           .on('click', () => {
@@ -531,27 +475,30 @@ export default class IsoformAndVariantTrack {
           })
           .on('mouseover', function(event) {
             const d = d3.select(this).datum() as any
-            const theVariant = d.variant
-            d3.selectAll<SVGGElement, { variant: VariantFeature }>(
-              '.variant-delins',
-            )
-              .filter(d => d.variant === theVariant)
-              .style('stroke', 'black')
+            if (!d) return
+            
+            // Highlight this specific variant
+            d3.select(this).style('stroke', 'black')
+            
+            // Show label for this variant
             d3.select('.label')
-              .selectAll<SVGGElement, { variant: VariantFeature }>(
-                '.variantLabel,.variantLabelBackground',
-              )
-              .raise()
-              .filter(d => d.variant === theVariant)
+              .selectAll('.variantLabel,.variantLabelBackground')
+              .filter((labelData: any) => labelData && labelData.variant === d.variant)
               .style('opacity', 1)
+              .style('pointer-events', 'auto')  // Enable pointer events when visible
+              .raise()
           })
-          .on('mouseout', () => {
-            d3.selectAll<SVGGElement, { selected: string }>('.variant-delins')
-              .filter(d => d.selected != 'true')
-              .style('stroke', null)
+          .on('mouseout', function() {
+            const d = d3.select(this).datum() as any
+            if (!d || d.selected !== 'true') {
+              d3.select(this).style('stroke', null)
+            }
+            
+            // Hide all labels
             d3.select('.label')
               .selectAll('.variantLabel,.variantLabelBackground')
               .style('opacity', 0)
+              .style('pointer-events', 'none')  // Disable pointer events when hidden
           })
           .datum({
             fmin: fmin,
@@ -559,34 +506,141 @@ export default class IsoformAndVariantTrack {
             variant: symbol_string + fmin,
             alleles: variant_alleles,
           })
+      } else if (type.toLowerCase() === 'deletion') {
+        // Handle deletions
+        const variantRow = variantRowMap.get(`${fmin}-deletion`) || 0
+        const width = Math.max(Math.ceil(x(fmax) - x(fmin)), 5) // Minimum width of 5px for visibility
+        const variantDatum = {
+          fmin: fmin,
+          fmax: fmax,
+          variant: symbol_string + fmin,
+          alleles: variant_alleles,
+          selected: false
+        }
+        
+        console.log(`🎯 DEBUG DELETION ${variantIndex}:`)
+        console.log(`    Symbol: ${symbol_string}`)
+        console.log(`    fmin=${fmin}, fmax=${fmax}`)
+        console.log(`    Map key='${fmin}-deletion'`)
+        console.log(`    Retrieved row=${variantRow}`)
+        console.log(`    Pixel X: ${x(fmin)} to ${x(fmax)}`)
+        console.log(`    Width: ${width}px (min 5px for visibility)`)
+        console.log(`    Height: ${VARIANT_HEIGHT}px`)
+        console.log(`    Row group: ${variantRow}`)
+        console.log(`    Datum variant key: ${variantDatum.variant}`)
+        
+        // Use the row group for proper isolation
+        const targetGroup = rowGroups[variantRow] || variantContainer
+        const deletionRect = targetGroup
+          .append('rect')
+          .attr('class', 'variant-deletion')
+          .attr('id', `variant-${fmin}`)
+          .attr('x', x(fmin))
+          .attr('y', 0)  // Y is 0 because row group handles vertical position
+          .attr('width', width)
+          .attr('height', VARIANT_HEIGHT) // Use full height like other variants
+          // NO TRANSFORM - row group handles the vertical positioning
+          .attr('fill', consequenceColor)
+          .attr('stroke-width', 2)
+          .style('cursor', 'pointer')  // Show it's interactive
+          .on('click', () => {
+            renderTooltipDescription(tooltipDiv, descriptionHtml, closeToolTip)
+          })
+          .on('mouseover', function(event) {
+            const d = d3.select(this).datum() as any
+            if (!d) return
+            
+            // Highlight this specific deletion rectangle
+            d3.select(this)
+              .style('stroke', 'black')
+              .style('stroke-width', 3)
+            
+            // Show label for this variant
+            d3.select('.label')
+              .selectAll('.variantLabel,.variantLabelBackground')
+              .filter((labelData: any) => labelData && labelData.variant === d.variant)
+              .style('opacity', 1)
+              .style('pointer-events', 'auto')  // Enable pointer events when visible
+              .raise()
+          })
+          .on('mouseout', function() {
+            const d = d3.select(this).datum() as any
+            if (!d || d.selected !== 'true') {
+              d3.select(this)
+                .style('stroke', null)
+                .style('stroke-width', 2)
+            }
+            
+            // Hide all labels
+            d3.select('.label')
+              .selectAll('.variantLabel,.variantLabelBackground')
+              .style('opacity', 0)
+              .style('pointer-events', 'none')  // Disable pointer events when hidden
+          })
+          .datum(variantDatum)
+        
+        // Log the actual rect properties after creation
+        const rectNode = deletionRect.node() as SVGRectElement
+        if (rectNode) {
+          const bbox = rectNode.getBBox()
+          console.log(`    Actual rect BBox: x=${bbox.x}, y=${bbox.y}, width=${bbox.width}, height=${bbox.height}`)
+        }
       } else {
         drawnVariant = false
       }
 
       if (drawnVariant) {
-        let label_offset = 0
-        label_offset = isPoints ? x(fmin) - SNV_WIDTH / 2 : x(fmin)
+        // Calculate initial position with offset to the right of the variant
+        // For deletions, position label after the deletion ends
+        const isDeletion = type.toLowerCase() === 'deletion'
+        const variantXPos = isDeletion ? x(fmax) : x(fmin)
+        const labelOffsetFromVariant = isPoints ? 15 : 10
+        let label_offset = variantXPos + labelOffsetFromVariant
+        
+        // Get the row for this variant to calculate correct label height
+        const variantType = type.toLowerCase()
+        let labelVariantRow = 0
+        if (variantType === 'deletion') {
+          labelVariantRow = variantRowMap.get(`${fmin}-deletion`) || 0
+        } else if (variantType === 'snv' || variantType === 'point_mutation') {
+          labelVariantRow = variantRowMap.get(`${fmin}-snv`) || 0
+        } else if (variantType === 'insertion') {
+          labelVariantRow = variantRowMap.get(`${fmin}-insertion`) || 0
+        } else if (variantType === 'delins' || variantType === 'substitution' || variantType === 'indel' || variantType === 'mnv') {
+          labelVariantRow = variantRowMap.get(`${fmin}-delins`) || 0
+        }
 
-        const label_height = (VARIANT_HEIGHT + VARIANT_TRACK_SPACING) * numVariantTracks + LABEL_PADDING
+        // Calculate label height based on the variant's row
+        const label_height = (VARIANT_HEIGHT + VARIANT_TRACK_SPACING) * labelVariantRow + LABEL_PADDING
+        
+        console.log(`  📝 Label for variant at ${fmin}:`)
+        console.log(`    Symbol: ${symbol_string}`)
+        console.log(`    Type: ${variantType}`)
+        console.log(`    Row: ${labelVariantRow}`)
+        console.log(`    Label X offset: ${label_offset} (${isDeletion ? 'after deletion end' : 'after variant start'})`)
+        console.log(`    Label Y height: ${label_height}`)
+        console.log(`    Label datum variant key: ${symbol_string + fmin}`)
+        
         const variant_label = labelTrack
           .append('text')
           .attr('class', 'variantLabel')
-          .attr('fill', consequenceColor)
+          .attr('fill', 'black')
           .attr('opacity', 0)
           .attr('height', ISOFORM_TITLE_HEIGHT)
           .attr('transform', `translate(${label_offset},${label_height})`)
           // if html, it cuts off the <sup> tag
           .text(symbol_string)
-          .on('click', () => {
-            renderTooltipDescription(tooltipDiv, descriptionHtml, closeToolTip)
-          })
+          .style('pointer-events', 'none')  // Labels should not capture events when invisible
           .datum({ fmin: fmin, variant: symbol_string + fmin })
 
         const symbol_string_width = variant_label.node()?.getBBox().width ?? 0
-        if (symbol_string_width + label_offset > viewerWidth) {
-          const diff = symbol_string_width + label_offset - viewerWidth
-          label_offset -= diff
-          variant_label.attr('transform', `translate(${label_offset},35)`)
+        // If label would go off the right edge, position it to the left
+        if (label_offset + symbol_string_width > viewerWidth - 5) {
+          // For deletions, position to the left of the deletion START, not END
+          const leftPositionBase = isDeletion ? x(fmin) : variantXPos
+          label_offset = leftPositionBase - symbol_string_width - labelOffsetFromVariant
+          console.log(`    📝 Label repositioned to left: ${label_offset}`)
+          variant_label.attr('transform', `translate(${label_offset},${label_height})`)
         }
       }
     })
@@ -594,6 +648,9 @@ export default class IsoformAndVariantTrack {
     // reposition labels after height is determined.
     const labelTrackPosition = variantTrackAdjust
     labelTrack.attr('transform', `translate(0,${labelTrackPosition})`)
+    
+    // Ensure label track is always above variants for proper mouseover visibility
+    labelTrack.raise()
 
     // Calculate where this track should go and translate it, must be after the variant labels are added
     const newTrackPosition =

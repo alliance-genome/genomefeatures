@@ -593,14 +593,17 @@ type VariantBinWithPixels = VariantBin & {
 
 // New function to calculate variant positions with overlap detection
 export function calculateVariantTrackLayout(variantBins: VariantBinWithPixels[], pixelBuffer: number = 15) {
-  // Group variants by type (excluding deletions which are handled separately)
-  const variantsByType: Record<string, VariantBinWithPixels[]> = {}
+  // Process ALL variants together for unified row assignment
+  const variantLayout: Array<{ variant: VariantBinWithPixels; row: number; type: string }> = []
   
-  variantBins.forEach(variant => {
-    if (variant.type.toLowerCase() === 'deletion') {
-      return // Skip deletions as they're handled separately
-    }
-    
+  // Sort all variants by position
+  const sortedVariants = [...variantBins].sort((a, b) => a.fmin - b.fmin)
+  
+  // Track occupied spaces for each row using pixel positions
+  const rows: Array<{ pixelFmin: number; pixelFmax: number }[]> = []
+  
+  sortedVariants.forEach(variant => {
+    // Determine variant type for the key
     let typeKey = ''
     const type = variant.type.toLowerCase()
     
@@ -610,59 +613,76 @@ export function calculateVariantTrackLayout(variantBins: VariantBinWithPixels[],
       typeKey = 'insertion'
     } else if (type === 'delins' || type === 'substitution' || type === 'indel' || type === 'mnv') {
       typeKey = 'delins'
+    } else if (type === 'deletion') {
+      typeKey = 'deletion'
     }
     
-    if (typeKey) {
-      if (!variantsByType[typeKey]) {
-        variantsByType[typeKey] = []
-      }
-      variantsByType[typeKey].push(variant)
+    if (!typeKey) return // Skip unknown types
+    
+    let placed = false
+    let rowIndex = 0
+    
+    // Use pixel positions if available, otherwise use base positions
+    let variantPixelMin = variant.pixelFmin !== undefined ? variant.pixelFmin : variant.fmin
+    let variantPixelMax = variant.pixelFmax !== undefined ? variant.pixelFmax : variant.fmax
+    
+    // For point mutations (SNVs), ensure minimum width for the visual representation
+    if (typeKey === 'snv') {
+      // SNV triangles are about 10 pixels wide visually
+      // Always expand SNVs since they're point mutations
+      const center = (variantPixelMin + variantPixelMax) / 2
+      variantPixelMin = center - 5
+      variantPixelMax = center + 5
     }
-  })
-  
-  // For each type, calculate row positions to avoid overlaps
-  const variantLayout: Array<{ variant: VariantBinWithPixels; row: number; type: string }> = []
-  
-  Object.entries(variantsByType).forEach(([type, variants]) => {
-    // Sort variants by position
-    variants.sort((a, b) => a.fmin - b.fmin)
     
-    // Track occupied spaces for each row using pixel positions
-    const rows: Array<{ pixelFmin: number; pixelFmax: number }[]> = []
+    // For delins/indels, also ensure minimum width
+    if (typeKey === 'delins' && Math.abs(variantPixelMax - variantPixelMin) < 10) {
+      const center = (variantPixelMin + variantPixelMax) / 2
+      variantPixelMin = center - 5
+      variantPixelMax = center + 5
+    }
     
-    variants.forEach(variant => {
-      let placed = false
-      let rowIndex = 0
-      
-      // Use pixel positions if available, otherwise use base positions
-      const variantPixelMin = variant.pixelFmin !== undefined ? variant.pixelFmin : variant.fmin
-      const variantPixelMax = variant.pixelFmax !== undefined ? variant.pixelFmax : variant.fmax
-      
-      // Try to place variant in existing rows
-      while (!placed) {
-        if (!rows[rowIndex]) {
-          rows[rowIndex] = []
-        }
-        
-        // Check if variant overlaps with any existing variant in this row
-        const hasOverlap = rows[rowIndex].some(existing => {
-          // Add pixel buffer to prevent too-close positioning
-          const bufferedMin = existing.pixelFmin - pixelBuffer
-          const bufferedMax = existing.pixelFmax + pixelBuffer
-          return !(variantPixelMax < bufferedMin || variantPixelMin > bufferedMax)
-        })
-        
-        if (!hasOverlap) {
-          // Place variant in this row
-          rows[rowIndex].push({ pixelFmin: variantPixelMin, pixelFmax: variantPixelMax })
-          variantLayout.push({ variant, row: rowIndex, type })
-          placed = true
-        } else {
-          // Try next row
-          rowIndex++
-        }
+    // For deletions, use actual pixel width
+    if (typeKey === 'deletion') {
+      // Deletions should use their actual width, just ensure minimum visibility
+      if (Math.abs(variantPixelMax - variantPixelMin) < 5) {
+        const center = (variantPixelMin + variantPixelMax) / 2
+        variantPixelMin = center - 2.5
+        variantPixelMax = center + 2.5
       }
-    })
+    }
+    
+    console.log(`🔍 Placing ${typeKey} variant at ${variant.fmin}: pixelMin=${variantPixelMin}, pixelMax=${variantPixelMax}`)
+    
+    // Try to place variant in existing rows
+    while (!placed) {
+      if (!rows[rowIndex]) {
+        rows[rowIndex] = []
+      }
+      
+      // Check if variant overlaps with any existing variant in this row
+      const hasOverlap = rows[rowIndex].some(existing => {
+        // Add pixel buffer to prevent too-close positioning
+        const bufferedMin = existing.pixelFmin - pixelBuffer
+        const bufferedMax = existing.pixelFmax + pixelBuffer
+        const overlaps = !(variantPixelMax < bufferedMin || variantPixelMin > bufferedMax)
+        if (overlaps) {
+          console.log(`  Row ${rowIndex}: Overlap detected! variant[${variantPixelMin}-${variantPixelMax}] vs existing[${existing.pixelFmin}-${existing.pixelFmax}] (buffered: ${bufferedMin}-${bufferedMax})`)
+        }
+        return overlaps
+      })
+      
+      if (!hasOverlap) {
+        // Place variant in this row
+        rows[rowIndex].push({ pixelFmin: variantPixelMin, pixelFmax: variantPixelMax })
+        variantLayout.push({ variant, row: rowIndex, type: typeKey })
+        placed = true
+        console.log(`  Placed in row ${rowIndex}`)
+      } else {
+        // Try next row
+        rowIndex++
+      }
+    }
   })
   
   return variantLayout
