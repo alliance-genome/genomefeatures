@@ -223,14 +223,25 @@ export default class IsoformAndVariantTrack {
       (viewEnd - viewStart) * binRatio,
     )
 
+    // Process ALL variants together through unified layout
+    const allBins = [...variantBins]
+
+
+    // Need to adjust for the label track being created already... but is below this track.
+    const variantTrackAdjust = calculateNewTrackPosition(this.viewer)
+    
     // Check if we have no variant data and add a message if needed
+    // Only show message for species that are expected to have variants (not human or SGD)
     const hasNoVariants = !variantData || variantData.length === 0
-    if (hasNoVariants) {
-      // Add a message about missing variant data
+    const isHumanOrSGD = source === 'human' || source === 'SGD'
+    
+    if (hasNoVariants && !isHumanOrSGD) {
+      // Add a message about missing variant data only for species expected to have variants
+      // Position it where the variant track would normally appear
       const variantMessageTrack = viewer
         .append('g')
         .attr('class', 'variant-message track')
-        .attr('transform', 'translate(0,5)')
+        .attr('transform', `translate(0,${variantTrackAdjust})`)
       
       variantMessageTrack
         .append('text')
@@ -241,13 +252,6 @@ export default class IsoformAndVariantTrack {
         .attr('font-size', '12px')
         .text('No variant data available for this region. Please contact help@alliancegenome.org if this is unexpected.')
     }
-
-    // Process ALL variants together through unified layout
-    const allBins = [...variantBins]
-
-
-    // Need to adjust for the label track being created already... but is below this track.
-    const variantTrackAdjust = calculateNewTrackPosition(this.viewer)
     const variantContainer = viewer
       .append('g')
       .attr('class', 'variants track')
@@ -286,7 +290,7 @@ export default class IsoformAndVariantTrack {
 
     // Create separate groups for each row to ensure proper event isolation
     // Create from bottom to top so higher rows naturally render on top
-    const rowGroups: d3.Selection<SVGGElement, unknown, null, undefined>[] = []
+    const rowGroups: d3.Selection<SVGGElement, unknown, HTMLElement | null, undefined>[] = []
     for (let i = 0; i < numVariantTracks; i++) {
       const rowGroup = variantContainer.append('g')
         .attr('class', `variant-row-${i}`)
