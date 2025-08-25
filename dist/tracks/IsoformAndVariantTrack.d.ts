@@ -17,7 +17,8 @@ export default class IsoformAndVariantTrack {
     private geneBounds?;
     private geneSymbol?;
     private geneId?;
-    constructor({ viewer, height, width, transcriptTypes, variantTypes, showVariantLabel, variantFilter, binRatio, isoformFilter, initialHighlight, trackData, variantData, geneBounds, geneSymbol, geneId, }: {
+    private speciesTaxonId?;
+    constructor({ viewer, height, width, transcriptTypes, variantTypes, showVariantLabel, variantFilter, binRatio, isoformFilter, initialHighlight, trackData, variantData, geneBounds, geneSymbol, geneId, speciesTaxonId, }: {
         viewer: Selection<SVGGElement, unknown, HTMLElement | null, undefined>;
         height: number;
         width: number;
@@ -36,6 +37,7 @@ export default class IsoformAndVariantTrack {
         };
         geneSymbol?: string;
         geneId?: string;
+        speciesTaxonId?: string;
     });
     DrawTrack(): number;
     filterVariantData(variantData: VariantFeature[], variantFilter: string[]): VariantFeature[];

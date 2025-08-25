@@ -25,6 +25,7 @@ interface Track {
   geneBounds?: { start: number; end: number }
   geneSymbol?: string
   geneId?: string
+  speciesTaxonId?: string
 }
 
 interface ViewerConfig {
@@ -216,6 +217,7 @@ export class GenomeFeatureViewer {
           geneBounds: track.geneBounds,
           geneSymbol: track.geneSymbol,
           geneId: track.geneId,
+          speciesTaxonId: track.speciesTaxonId,  // Pass species taxon ID
         })
         trackHeight += isoformVariantTrack.DrawTrack()
       } else if (track.type === TRACK_TYPE.ISOFORM_EMBEDDED_VARIANT) {

@@ -45,6 +45,7 @@ export default class IsoformAndVariantTrack {
   private geneBounds?: { start: number; end: number }
   private geneSymbol?: string
   private geneId?: string
+  private speciesTaxonId?: string
 
   constructor({
     viewer,
@@ -62,6 +63,7 @@ export default class IsoformAndVariantTrack {
     geneBounds,
     geneSymbol,
     geneId,
+    speciesTaxonId,
   }: {
     viewer: Selection<SVGGElement, unknown, HTMLElement | null, undefined>
     height: number
@@ -78,6 +80,7 @@ export default class IsoformAndVariantTrack {
     geneBounds?: { start: number; end: number }
     geneSymbol?: string
     geneId?: string
+    speciesTaxonId?: string
   }) {
     this.trackData = trackData ?? []
     this.variantData = variantData ?? []
@@ -94,6 +97,7 @@ export default class IsoformAndVariantTrack {
     this.geneBounds = geneBounds
     this.geneSymbol = geneSymbol
     this.geneId = geneId
+    this.speciesTaxonId = speciesTaxonId
   }
 
   DrawTrack() {
@@ -120,15 +124,21 @@ export default class IsoformAndVariantTrack {
       throw new Error('trackData must be a non-empty array')
     }
     
+    
     const source = this.trackData[0].source
     const chr = this.trackData[0].seqId
+    
+    
     const MAX_ROWS = !isoformFilter || isoformFilter.length === 0 ? 9 : 30
 
     const UTR_feats = ['UTR', 'five_prime_UTR', 'three_prime_UTR']
     const CDS_feats = ['CDS']
     const exon_feats = ['exon']
     const display_feats = this.transcriptTypes
+    
+    
     const dataRange = findRange(isoformData, display_feats, this.geneBounds, this.geneSymbol, this.geneId)
+    
 
     let viewStart = dataRange.fmin
     let viewEnd = dataRange.fmax
@@ -233,7 +243,21 @@ export default class IsoformAndVariantTrack {
     // Check if we have no variant data and add a message if needed
     // Only show message for species that are expected to have variants (not human or SGD)
     const hasNoVariants = !variantData || variantData.length === 0
-    const isHumanOrSGD = source === 'human' || source === 'SGD'
+    
+    
+    // Use speciesTaxonId to check for human or SGD
+    // Human: NCBITaxon:9606, SGD: NCBITaxon:559292
+    const isHuman = this.speciesTaxonId === 'NCBITaxon:9606'
+    const isSGD = this.speciesTaxonId === 'NCBITaxon:559292'
+    const isHumanOrSGD = isHuman || isSGD
+    
+    // DEBUG: Check multiple ways to identify human/SGD (keeping for debugging)
+    const isHumanOrSGDOldCheck = source === 'human' || source === 'SGD'
+    const isHumanOrSGDAlternate = source === 'HUMAN' || source === 'Homo sapiens' || 
+                                   source === 'H_sapiens' || source === 'h_sapiens' ||
+                                   source === 'SGD' || source === 'S_cerevisiae' ||
+                                   source === 'Saccharomyces cerevisiae'
+    
     
     if (hasNoVariants && !isHumanOrSGD) {
       // Add a message about missing variant data only for species expected to have variants

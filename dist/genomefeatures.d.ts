@@ -13,6 +13,7 @@ interface Track {
     };
     geneSymbol?: string;
     geneId?: string;
+    speciesTaxonId?: string;
 }
 interface ViewerConfig {
     tracks?: Track[];

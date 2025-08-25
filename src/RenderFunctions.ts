@@ -87,17 +87,23 @@ export function findRange(
   const targetGenes: SimpleFeatureSerialized[] = []
   
   // Find genes that match our gene identifier
+  
   for (const feature of data) {
     // Check if this top-level feature (gene) matches our target gene
     // Gene names might include the symbol (e.g., "Pax6") or ID (e.g., "MGI:97490")
+    // Also check gene_id field which is used by SGD
+    
     const geneMatches = 
       (geneSymbol && feature.name?.toLowerCase().includes(geneSymbol.toLowerCase())) ||
-      (geneId && (feature.name?.includes(geneId) || feature.id?.includes(geneId)))
+      (geneId && (feature.name?.includes(geneId) || feature.id?.includes(geneId) || 
+                  (feature as any).gene_id?.includes(geneId)))
+    
     
     if (geneMatches) {
       targetGenes.push(feature)
     }
   }
+  
   
   // Check if we found any matching genes
   if (targetGenes.length === 0) {
@@ -128,7 +134,7 @@ export function findRange(
   for (const feature of targetGenes) {
     const featureChildren = feature.children
     if (featureChildren) {
-      featureChildren.forEach(featureChild => {
+      featureChildren.forEach((featureChild, idx) => {
         if (display_feats.includes(featureChild.type)) {
           
           // Filter out transcripts that start before and end after the target gene bounds
@@ -136,6 +142,7 @@ export function findRange(
           if (geneBounds) {
             const startsBeforeGene = featureChild.fmin < geneBounds.start
             const endsAfterGene = featureChild.fmax > geneBounds.end
+            
             
             if (startsBeforeGene && endsAfterGene) {
               return // Skip this transcript
