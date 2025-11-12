@@ -339,11 +339,9 @@ export default class IsoformEmbeddedVariantTrack {
                 // @ts-expect-error
                 text_width = text_label.node().getBBox().width
               } catch (e) {
-                // console.error('Not yet rendered',e)
               }
               // First check to see if label goes past the end
               if (Number(text_width + x(featureChild.fmin)) > width) {
-                // console.error(featureChild.name + " goes over the edge");
               }
               const feat_end =
                 text_width > x(featureChild.fmax) - x(featureChild.fmin)
@@ -611,10 +609,7 @@ export default class IsoformEmbeddedVariantTrack {
                           isoform
                             .append('text')
                             .attr('class', 'variantLabel')
-                            .attr(
-                              'fill',
-                              selected ? 'sandybrown' : consequenceColor,
-                            )
+                            .attr('fill', 'black')
                             .attr('opacity', selected ? 1 : 0.5)
                             .attr('height', ISOFORM_TITLE_HEIGHT)
                             .attr(
@@ -693,7 +688,7 @@ export default class IsoformEmbeddedVariantTrack {
     variantData: VariantFeature[],
     variantFilter: string[],
   ): VariantFeature[] {
-    if (variantFilter.length === 0) {
+    if (!variantFilter || variantFilter.length === 0) {
       return variantData
     }
 

@@ -22,6 +22,10 @@ interface Track {
   label?: string
   variantData?: VariantFeature[]
   trackData?: SimpleFeatureSerialized[]
+  geneBounds?: { start: number; end: number }
+  geneSymbol?: string
+  geneId?: string
+  speciesTaxonId?: string
 }
 
 interface ViewerConfig {
@@ -154,6 +158,7 @@ export class GenomeFeatureViewer {
     const binRatio = this.config.binRatio ?? 0.01
 
     const region = this.config.region
+    
     const sequenceOptions = this._configureRange(
       region.start,
       region.end,
@@ -161,6 +166,7 @@ export class GenomeFeatureViewer {
     )
     const range = sequenceOptions.range
     const chromosome = region.chromosome
+    
     const variantFilter = this.config.variantFilter ?? []
     const isoformFilter = this.config.isoformFilter ?? []
     const htpVariant = this.config.htpVariant ?? ''
@@ -185,7 +191,13 @@ export class GenomeFeatureViewer {
     let trackHeight = LABEL_OFFSET
 
     const showVariantLabel = this.config.showVariantLabel ?? true
+    
     const { viewer, genome, height, tracks } = this
+    
+    if (!tracks || !Array.isArray(tracks)) {
+      throw new Error(`Tracks must be an array, got: ${typeof tracks}`)
+    }
+    
     tracks.map(track => {
       const { variantData, trackData } = track
 
@@ -202,6 +214,10 @@ export class GenomeFeatureViewer {
           variantFilter,
           binRatio,
           isoformFilter,
+          geneBounds: track.geneBounds,
+          geneSymbol: track.geneSymbol,
+          geneId: track.geneId,
+          speciesTaxonId: track.speciesTaxonId,  // Pass species taxon ID
         })
         trackHeight += isoformVariantTrack.DrawTrack()
       } else if (track.type === TRACK_TYPE.ISOFORM_EMBEDDED_VARIANT) {

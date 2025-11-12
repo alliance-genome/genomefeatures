@@ -24,6 +24,14 @@ body {
 
 .tooltip-table {
   text-align: left;
+  table-layout: fixed;
+  max-width: 700px;
+}
+
+.tooltip-table td {
+  word-break: break-all;
+  word-wrap: break-word;
+  max-width: 600px;
 }
 
 .tooltipDivX {

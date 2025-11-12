@@ -369,7 +369,7 @@ export function renderVariantDescription(description: VariantDescription) {
     change = `${ref_allele}->${alt_allele}`
   }
   returnString += `<table class="tooltip-table"><tbody>`
-  returnString += `<tr><th>Symbol</th><td>${description.symbolDetail}</td></tr>`
+  returnString += `<tr><th>Symbol</th><td style="word-break: break-all; max-width: 600px;">${description.symbolDetail}</td></tr>`
   returnString += `<tr><th>Type</th><td>${description.type}</td></tr>`
   returnString += `<tr><th>Consequence</th><td>${description.consequence}</td></tr>`
   if (description.impact) {
@@ -377,7 +377,7 @@ export function renderVariantDescription(description: VariantDescription) {
   }
   returnString += `<tr><th>Length</th><td>${length}</td></tr>`
   if (description.name !== description.symbol) {
-    returnString += `<tr><th>Name</th><td>${description.name}</td></tr>`
+    returnString += `<tr><th>Name</th><td style="word-break: break-all; max-width: 600px;">${description.name}</td></tr>`
   }
   if (description.geneId && description.geneSymbol) {
     returnString += `<tr><th>Allele of Genes</th><td> ${description.geneSymbol.length > descriptionWidth ? description.geneSymbol.slice(0, Math.max(0, descriptionWidth)) : description.geneSymbol} (${description.geneId})</td></tr>`
@@ -583,4 +583,101 @@ export function getVariantTrackPositions(variantData: VariantFeature[]) {
     }
   }
   return [...new Set(presentVariants)].sort()
+}
+
+// Extended type for variant bins with pixel positions
+type VariantBinWithPixels = VariantBin & {
+  pixelFmin?: number
+  pixelFmax?: number
+}
+
+// New function to calculate variant positions with overlap detection
+export function calculateVariantTrackLayout(variantBins: VariantBinWithPixels[], pixelBuffer: number = 15) {
+  // Process ALL variants together for unified row assignment
+  const variantLayout: Array<{ variant: VariantBinWithPixels; row: number; type: string }> = []
+  
+  // Sort all variants by position
+  const sortedVariants = [...variantBins].sort((a, b) => a.fmin - b.fmin)
+  
+  // Track occupied spaces for each row using pixel positions
+  const rows: Array<{ pixelFmin: number; pixelFmax: number }[]> = []
+  
+  sortedVariants.forEach(variant => {
+    // Determine variant type for the key
+    let typeKey = ''
+    const type = variant.type.toLowerCase()
+    
+    if (type === 'snv' || type === 'point_mutation') {
+      typeKey = 'snv'
+    } else if (type === 'insertion') {
+      typeKey = 'insertion'
+    } else if (type === 'delins' || type === 'substitution' || type === 'indel' || type === 'mnv') {
+      typeKey = 'delins'
+    } else if (type === 'deletion') {
+      typeKey = 'deletion'
+    }
+    
+    if (!typeKey) return // Skip unknown types
+    
+    let placed = false
+    let rowIndex = 0
+    
+    // Use pixel positions if available, otherwise use base positions
+    let variantPixelMin = variant.pixelFmin !== undefined ? variant.pixelFmin : variant.fmin
+    let variantPixelMax = variant.pixelFmax !== undefined ? variant.pixelFmax : variant.fmax
+    
+    // For point mutations (SNVs), ensure minimum width for the visual representation
+    if (typeKey === 'snv') {
+      // SNV triangles are about 10 pixels wide visually
+      // Always expand SNVs since they're point mutations
+      const center = (variantPixelMin + variantPixelMax) / 2
+      variantPixelMin = center - 5
+      variantPixelMax = center + 5
+    }
+    
+    // For delins/indels, also ensure minimum width
+    if (typeKey === 'delins' && Math.abs(variantPixelMax - variantPixelMin) < 10) {
+      const center = (variantPixelMin + variantPixelMax) / 2
+      variantPixelMin = center - 5
+      variantPixelMax = center + 5
+    }
+    
+    // For deletions, use actual pixel width
+    if (typeKey === 'deletion') {
+      // Deletions should use their actual width, just ensure minimum visibility
+      if (Math.abs(variantPixelMax - variantPixelMin) < 5) {
+        const center = (variantPixelMin + variantPixelMax) / 2
+        variantPixelMin = center - 2.5
+        variantPixelMax = center + 2.5
+      }
+    }
+
+    // Try to place variant in existing rows
+    while (!placed) {
+      if (!rows[rowIndex]) {
+        rows[rowIndex] = []
+      }
+      
+      // Check if variant overlaps with any existing variant in this row
+      const hasOverlap = rows[rowIndex].some(existing => {
+        // Add pixel buffer to prevent too-close positioning
+        const bufferedMin = existing.pixelFmin - pixelBuffer
+        const bufferedMax = existing.pixelFmax + pixelBuffer
+        const overlaps = !(variantPixelMax < bufferedMin || variantPixelMin > bufferedMax)
+        return overlaps
+      })
+      
+      if (!hasOverlap) {
+        // Place variant in this row
+        rows[rowIndex].push({ pixelFmin: variantPixelMin, pixelFmax: variantPixelMax })
+        variantLayout.push({ variant, row: rowIndex, type: typeKey })
+        placed = true
+      } else {
+        // Try next row
+        rowIndex++
+      }
+    }
+  })
+  
+  return variantLayout
 }
