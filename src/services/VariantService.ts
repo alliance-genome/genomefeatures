@@ -651,9 +651,7 @@ export function calculateVariantTrackLayout(variantBins: VariantBinWithPixels[],
         variantPixelMax = center + 2.5
       }
     }
-    
-    console.log(`🔍 Placing ${typeKey} variant at ${variant.fmin}: pixelMin=${variantPixelMin}, pixelMax=${variantPixelMax}`)
-    
+
     // Try to place variant in existing rows
     while (!placed) {
       if (!rows[rowIndex]) {
@@ -666,9 +664,6 @@ export function calculateVariantTrackLayout(variantBins: VariantBinWithPixels[],
         const bufferedMin = existing.pixelFmin - pixelBuffer
         const bufferedMax = existing.pixelFmax + pixelBuffer
         const overlaps = !(variantPixelMax < bufferedMin || variantPixelMin > bufferedMax)
-        if (overlaps) {
-          console.log(`  Row ${rowIndex}: Overlap detected! variant[${variantPixelMin}-${variantPixelMax}] vs existing[${existing.pixelFmin}-${existing.pixelFmax}] (buffered: ${bufferedMin}-${bufferedMax})`)
-        }
         return overlaps
       })
       
@@ -677,7 +672,6 @@ export function calculateVariantTrackLayout(variantBins: VariantBinWithPixels[],
         rows[rowIndex].push({ pixelFmin: variantPixelMin, pixelFmax: variantPixelMax })
         variantLayout.push({ variant, row: rowIndex, type: typeKey })
         placed = true
-        console.log(`  Placed in row ${rowIndex}`)
       } else {
         // Try next row
         rowIndex++
