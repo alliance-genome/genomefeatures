@@ -5,6 +5,12 @@ export interface StaticArgs {
     genome: string;
     divId?: string;
     type: TrackType;
+    geneBounds?: {
+        start: number;
+        end: number;
+    };
+    geneSymbol?: string;
+    geneId?: string;
     showVariantLabel?: boolean;
     variantFilter?: string[];
     isoformFilter?: string[];
@@ -13,7 +19,7 @@ export interface StaticArgs {
     vcfTabixUrl?: string;
     ncListUrlTemplate: string;
 }
-export declare function createExampleStatic({ locString, genome, divId, type, showVariantLabel, variantFilter, isoformFilter, ncListUrlTemplate, vcfTabixUrl, }: StaticArgs): HTMLDivElement;
+export declare function createExampleStatic({ locString, genome, divId, type, geneBounds, geneSymbol, geneId, showVariantLabel, variantFilter, isoformFilter, ncListUrlTemplate, vcfTabixUrl, }: StaticArgs): HTMLDivElement;
 export interface ApolloArgs {
     locString: string;
     genome: string;

@@ -28,6 +28,9 @@ export interface StaticArgs {
   genome: string
   divId?: string
   type: TrackType
+  geneBounds?: { start: number; end: number }
+  geneSymbol?: string
+  geneId?: string
   showVariantLabel?: boolean
   variantFilter?: string[]
   isoformFilter?: string[]
@@ -41,6 +44,9 @@ export function createExampleStatic({
   genome,
   divId = 'mysvg',
   type,
+  geneBounds,
+  geneSymbol,
+  geneId,
   showVariantLabel,
   variantFilter,
   isoformFilter,
@@ -74,6 +80,9 @@ export function createExampleStatic({
               type,
               trackData,
               variantData,
+              geneBounds,
+              geneSymbol,
+              geneId,
             },
           ],
         },
