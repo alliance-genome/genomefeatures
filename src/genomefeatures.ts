@@ -243,6 +243,9 @@ export class GenomeFeatureViewer {
           trackData,
           transcriptTypes,
           htpVariant,
+          geneBounds: track.geneBounds,
+          geneSymbol: track.geneSymbol,
+          geneId: track.geneId,
         })
         trackHeight += isoformTrack.DrawTrack()
       } else if (track.type === TRACK_TYPE.VARIANT) {

@@ -1,4 +1,5 @@
 export const defaultTranscriptTypes = [
+  'transcript',
   'mRNA',
   'ncRNA',
   'piRNA',

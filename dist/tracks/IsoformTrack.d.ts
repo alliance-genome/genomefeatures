@@ -10,7 +10,10 @@ export default class IsoformTrack {
     private htpVariant?;
     private region;
     private genome;
-    constructor({ viewer, height, width, transcriptTypes, htpVariant, trackData, region, genome, }: {
+    private geneBounds?;
+    private geneSymbol?;
+    private geneId?;
+    constructor({ viewer, height, width, transcriptTypes, htpVariant, trackData, region, genome, geneBounds, geneSymbol, geneId, }: {
         viewer: Selection<SVGGElement, unknown, HTMLElement | null, any>;
         height: number;
         width: number;
@@ -19,7 +22,14 @@ export default class IsoformTrack {
         trackData?: SimpleFeatureSerialized[];
         region: Region;
         genome: string;
+        geneBounds?: {
+            start: number;
+            end: number;
+        };
+        geneSymbol?: string;
+        geneId?: string;
     });
+    private filterTrackDataForTargetGene;
     private renderTooltipDescription;
     DrawTrack(): number;
 }
