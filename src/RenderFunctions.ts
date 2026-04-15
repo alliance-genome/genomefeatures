@@ -1,5 +1,6 @@
 import * as d3 from 'd3-selection'
 
+import { filterTrackDataForTargetGene } from './services/TargetGeneService'
 import { SimpleFeatureSerialized } from './services/types'
 
 // Takes in the current entry start/end and the array of used space and assigns a row
@@ -57,84 +58,13 @@ export function findRange(
   let fmax = -1
   const extremeFeatures: {name: string, type: string, fmin: number, fmax: number}[] = []
   
-  // If no gene filtering is provided, process all data (this is the case for allele pages)
-  // The allele page already has filtered data specific to the gene
-  if (!geneSymbol && !geneId) {
-    // Process all features in the data
-    for (const feature of data) {
-      const featureChildren = feature.children
-      if (featureChildren) {
-        featureChildren.forEach(featureChild => {
-          if (display_feats.includes(featureChild.type)) {
-            // Update fmin if we find something earlier
-            if (fmin < 0 || featureChild.fmin < fmin) {
-              fmin = featureChild.fmin
-            }
-            
-            // Update fmax if we find something later
-            if (fmax < 0 || featureChild.fmax > fmax) {
-              fmax = featureChild.fmax
-            }
-          }
-        })
-      }
-    }
-    
-    return { fmin, fmax }
-  }
-  
-  // We'll only consider features from the target gene
-  const targetGenes: SimpleFeatureSerialized[] = []
-  
-  // Find genes that match our gene identifier
-  
-  for (const feature of data) {
-    // Check if this top-level feature (gene) matches our target gene
-    // Gene names might include the symbol (e.g., "Pax6") or ID (e.g., "MGI:97490")
-    // Also check gene_id field which is used by SGD
-    
-    const geneMatches = 
-      (geneSymbol && feature.name?.toLowerCase().includes(geneSymbol.toLowerCase())) ||
-      (geneId && (feature.name?.includes(geneId) || feature.id?.includes(geneId) || 
-                  (feature as any).gene_id?.includes(geneId)))
-    
-    
-    if (geneMatches) {
-      targetGenes.push(feature)
-    }
-  }
-  
-  
-  // Check if we found any matching genes
-  if (targetGenes.length === 0) {
-    // Fall back to processing all data if no matches found
-    for (const feature of data) {
-      const featureChildren = feature.children
-      if (featureChildren) {
-        featureChildren.forEach(featureChild => {
-          if (display_feats.includes(featureChild.type)) {
-            // Update fmin if we find something earlier
-            if (fmin < 0 || featureChild.fmin < fmin) {
-              fmin = featureChild.fmin
-            }
-            
-            // Update fmax if we find something later  
-            if (fmax < 0 || featureChild.fmax > fmax) {
-              fmax = featureChild.fmax
-            }
-          }
-        })
-      }
-    }
-    
-    return { fmin, fmax }
-  }
+  const targetGenes = filterTrackDataForTargetGene(data, geneSymbol, geneId)
 
   // Now only process children of target genes
   for (const feature of targetGenes) {
     const featureChildren = feature.children
     if (featureChildren) {
-      featureChildren.forEach((featureChild, idx) => {
+      featureChildren.forEach(featureChild => {
         if (display_feats.includes(featureChild.type)) {
           
           // Filter out transcripts that start before and end after the target gene bounds

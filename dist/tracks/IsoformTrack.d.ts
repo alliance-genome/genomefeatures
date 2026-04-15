@@ -29,7 +29,6 @@ export default class IsoformTrack {
         geneSymbol?: string;
         geneId?: string;
     });
-    private filterTrackDataForTargetGene;
     private renderTooltipDescription;
     DrawTrack(): number;
 }
