@@ -1,7 +1,7 @@
 import type { SimpleFeatureSerialized } from './types'
 
 type TargetGeneFeature = SimpleFeatureSerialized & {
-  alias?: string[]
+  alias?: string | string[]
   curie?: string
   gene_id?: string
 }
@@ -10,8 +10,13 @@ function normalizeValue(value?: string) {
   return value?.toLowerCase()
 }
 
-function normalizeValues(values?: string[]) {
-  return values?.map(value => value.toLowerCase())
+function normalizeValues(values?: string | string[]) {
+  if (!values) {
+    return undefined
+  }
+
+  const aliases = Array.isArray(values) ? values : [values]
+  return aliases.map(value => value.toLowerCase())
 }
 
 function valueMatchesTarget(value: string | undefined, target: string | undefined) {

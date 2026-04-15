@@ -1,6 +1,6 @@
 import { SimpleFeatureSerialized } from './types';
 type TargetGeneFeature = SimpleFeatureSerialized & {
-    alias?: string[];
+    alias?: string | string[];
     curie?: string;
     gene_id?: string;
 };
