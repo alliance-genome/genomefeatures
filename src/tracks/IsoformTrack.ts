@@ -1,6 +1,7 @@
 import * as d3 from 'd3'
 
 import { calculateNewTrackPosition, checkSpace } from '../RenderFunctions'
+import { filterTrackDataForTargetGene } from '../services/TargetGeneService'
 import {
   getJBrowseLink,
   renderTrackDescription,
@@ -64,41 +65,6 @@ export default class IsoformTrack {
     this.geneId = geneId
   }
 
-  private filterTrackDataForTargetGene(data: SimpleFeatureSerialized[]) {
-    if (!this.geneSymbol && !this.geneId) {
-      return data
-    }
-
-    const normalizedGeneSymbol = this.geneSymbol?.toLowerCase()
-    const normalizedGeneId = this.geneId?.toLowerCase()
-
-    const targetGenes = data.filter(feature => {
-      const aliases = (feature as SimpleFeatureSerialized & { alias?: string[] }).alias
-      const geneCurie = (feature as SimpleFeatureSerialized & { curie?: string }).curie
-      const featureGeneId = (feature as SimpleFeatureSerialized & { gene_id?: string })
-        .gene_id
-      const featureName = feature.name?.toLowerCase()
-      const featureId = feature.id?.toLowerCase()
-      const normalizedAliases = aliases?.map(alias => alias.toLowerCase())
-      const normalizedCurie = geneCurie?.toLowerCase()
-      const normalizedFeatureGeneId = featureGeneId?.toLowerCase()
-
-      return Boolean(
-        (normalizedGeneSymbol &&
-          (featureName?.includes(normalizedGeneSymbol) ||
-            normalizedAliases?.some(alias => alias.includes(normalizedGeneSymbol)))) ||
-          (normalizedGeneId &&
-            (featureName?.includes(normalizedGeneId) ||
-              featureId?.includes(normalizedGeneId) ||
-              normalizedFeatureGeneId?.includes(normalizedGeneId) ||
-              normalizedCurie?.includes(normalizedGeneId) ||
-              normalizedAliases?.some(alias => alias.includes(normalizedGeneId)))),
-      )
-    })
-
-    return targetGenes.length > 0 ? targetGenes : data
-  }
-
   private renderTooltipDescription(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     tooltipDiv: Selection<HTMLDivElement, unknown, HTMLElement, any>,
@@ -137,7 +103,11 @@ export default class IsoformTrack {
   }
 
   DrawTrack() {
-    let data = this.filterTrackDataForTargetGene(this.trackData)
+    let data = filterTrackDataForTargetGene(
+      this.trackData,
+      this.geneSymbol,
+      this.geneId,
+    )
     const htpVariant = this.htpVariant
     const viewer = this.viewer
     const width = this.width
