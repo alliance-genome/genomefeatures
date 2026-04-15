@@ -11,7 +11,7 @@ import {
 function makeFeature(
   overrides: Partial<
     SimpleFeatureSerialized & {
-      alias?: string[]
+      alias?: string | string[]
       curie?: string
       gene_id?: string
     }
@@ -62,6 +62,16 @@ test('matches target genes by alias when the canonical symbol differs from the f
     id: 'gene-0002',
     name: 'YDR404C',
     alias: ['RPB7', 'B16'],
+  })
+
+  assert.equal(featureMatchesTargetGene(aliasFeature, 'RPB7'), true)
+})
+
+test('matches target genes when yeast-style alias data is returned as a string', () => {
+  const aliasFeature = makeFeature({
+    id: 'gene-0002b',
+    name: 'YDR404C',
+    alias: 'RPB7',
   })
 
   assert.equal(featureMatchesTargetGene(aliasFeature, 'RPB7'), true)

@@ -2269,7 +2269,7 @@ function $e(t) {
   return t?.toLowerCase();
 }
 function Su(t) {
-  return t?.map((e) => e.toLowerCase());
+  return t ? (Array.isArray(t) ? t : [t]).map((n) => n.toLowerCase()) : void 0;
 }
 function de(t, e) {
   return !!(t && e && t.includes(e));
