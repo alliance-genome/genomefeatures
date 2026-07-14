@@ -57,4 +57,5 @@ export declare class GenomeFeatureViewer {
 export { fetchNCListData } from './NCListFetcher';
 export { fetchApolloAPIData } from './ApolloAPIFetcher';
 export { fetchTabixVcfData } from './GMODVcfFetcher';
+export { fetchTabixGffData } from './GFF3Fetcher';
 export { parseLocString } from './util';

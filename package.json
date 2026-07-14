@@ -1,6 +1,6 @@
 {
   "name": "genomefeatures",
-  "version": "1.0.5",
+  "version": "2.0.0",
   "type": "module",
   "description": "A D3 based genome feature rendering",
   "license": "MIT",
@@ -29,7 +29,7 @@
     "format": "prettier --write .",
     "dev": "vite",
     "prebuild": "rm -rf dist",
-    "test": "node --experimental-strip-types --test src/services/TargetGeneService.test.ts",
+    "test": "node --experimental-strip-types --test src/services/TargetGeneService.test.ts src/GFF3Fetcher.test.ts",
     "lint": "eslint --report-unused-disable-directives --max-warnings 0",
     "build": "vite build",
     "preview": "vite preview",
@@ -61,6 +61,7 @@
     "vite-plugin-dts": "^4.5.0"
   },
   "dependencies": {
+    "@gmod/gff": "^2.1.0",
     "@gmod/nclist": "^3.0.0",
     "@gmod/tabix": "^3.0.2",
     "@gmod/vcf": "^6.0.8",
