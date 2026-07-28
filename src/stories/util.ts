@@ -2,6 +2,7 @@ import {
   GenomeFeatureViewer,
   fetchApolloAPIData,
   fetchNCListData,
+  fetchTabixGffData,
   fetchTabixVcfData,
 } from '../genomefeatures'
 import { TrackType } from '../tracks/TrackTypeEnum'
@@ -37,7 +38,8 @@ export interface StaticArgs {
   initialHighlight?: string[]
   showVariants?: boolean
   vcfTabixUrl?: string
-  ncListUrlTemplate: string
+  ncListUrlTemplate?: string
+  gffTabixUrl?: string
 }
 export function createExampleStatic({
   locString,
@@ -51,15 +53,21 @@ export function createExampleStatic({
   variantFilter,
   isoformFilter,
   ncListUrlTemplate,
+  gffTabixUrl,
   vcfTabixUrl,
 }: StaticArgs) {
   // eslint-disable-next-line @typescript-eslint/no-floating-promises
   ;(async () => {
     const region = parseLocString(locString)
-    const trackData = await fetchNCListData({
-      region,
-      urlTemplate: ncListUrlTemplate,
-    })
+    const trackData = gffTabixUrl
+      ? await fetchTabixGffData({
+          region,
+          url: gffTabixUrl,
+        })
+      : await fetchNCListData({
+          region,
+          urlTemplate: ncListUrlTemplate!,
+        })
     const variantData = vcfTabixUrl
       ? await fetchTabixVcfData({
           url: vcfTabixUrl,

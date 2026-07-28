@@ -17,9 +17,10 @@ export interface StaticArgs {
     initialHighlight?: string[];
     showVariants?: boolean;
     vcfTabixUrl?: string;
-    ncListUrlTemplate: string;
+    ncListUrlTemplate?: string;
+    gffTabixUrl?: string;
 }
-export declare function createExampleStatic({ locString, genome, divId, type, geneBounds, geneSymbol, geneId, showVariantLabel, variantFilter, isoformFilter, ncListUrlTemplate, vcfTabixUrl, }: StaticArgs): HTMLDivElement;
+export declare function createExampleStatic({ locString, genome, divId, type, geneBounds, geneSymbol, geneId, showVariantLabel, variantFilter, isoformFilter, ncListUrlTemplate, gffTabixUrl, vcfTabixUrl, }: StaticArgs): HTMLDivElement;
 export interface ApolloArgs {
     locString: string;
     genome: string;
