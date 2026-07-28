@@ -21,6 +21,7 @@
         const {
           parseLocString,
           fetchNCListData,
+          // fetchTabixGffData, // alternative to fetchNCListData below, see README
           fetchTabixVcfData,
           GenomeFeatureViewer,
         } = await import(
@@ -40,6 +41,11 @@
           region,
           urlTemplate: ncListUrlTemplate,
         })
+        // Or, to load from a tabix-indexed GFF3 file instead of NCList:
+        // const trackData = await fetchTabixGffData({
+        //   region,
+        //   url: 'https://.../some-genome.sorted.gff.gz',
+        // })
 
         const variantData = await fetchTabixVcfData({
           url: vcfTabixUrl,

@@ -30,13 +30,13 @@ e.g.
 
 ## Loading data
 
-### Static access pattern - Accessing JBrowse NCList files and VCF tabix files
+### Static access pattern - Accessing JBrowse NCList files, tabix-indexed GFF3 files, and VCF tabix files
 
 In the old days, this component required a WebApollo aka Apollo 2 server running
 to work (see [LEGACY.md](LEGACY.md)) but after the refactor, we can now fetch
-files from static files like JBrowse 1 NCList and VCF tabix files. This means
-you do not need a complex apollo deployment to use this component: just some
-static files
+files from static files like JBrowse 1 NCList files, tabix-indexed GFF3 files,
+and VCF tabix files. This means you do not need a complex apollo deployment to
+use this component: just some static files
 
 ```typescript
 import {
@@ -92,8 +92,28 @@ And then in your HTML
 <svg id="svgelement"></svg>
 ```
 
-This could likely also be wired up with @gmod/gff and @gmod/tabix to fetch from
-a GFF3 file backend, but NCList was what was available
+### Fetching gene/transcript features from a tabix-indexed GFF3 file
+
+As an alternative to NCList, `trackData` can also be fetched directly from a
+bgzipped, tabix-indexed GFF3 file (`.gff3.gz` + `.gff3.gz.tbi`, or a `.csi`
+index) using `fetchTabixGffData`. This uses
+[`@gmod/tabix`](https://github.com/GMOD/tabix-js) and
+[`@gmod/gff`](https://github.com/GMOD/gff-js) under the hood to query the
+region and parse the matching lines into the same `SimpleFeatureSerialized`
+shape as `fetchNCListData`, so it can be used as a drop-in replacement:
+
+```typescript
+import { fetchTabixGffData, parseLocString } from 'genomefeatures'
+
+const region = parseLocString('V:7106..57424')
+
+const trackData = await fetchTabixGffData({
+  url: 'https://s3.amazonaws.com/agrjbrowse/docker/9.1.0/WormBase/c_elegans_PRJNA13758/GFF_WB.sorted.gff.gz',
+  region,
+  // optional: defaults to `${url}.tbi`; pass indexType: 'CSI' for a .csi index
+  // indexUrl: 'https://.../GFF_WB.sorted.gff.gz.tbi',
+})
+```
 
 ## Developers
 
