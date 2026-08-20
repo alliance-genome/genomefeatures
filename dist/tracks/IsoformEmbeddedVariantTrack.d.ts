@@ -6,7 +6,7 @@ export default class IsoformEmbeddedVariantTrack {
     private variantData;
     private viewer;
     private width;
-    private variantFilter;
+    private variantFilter?;
     private height;
     private transcriptTypes;
     private variantTypes;
@@ -19,7 +19,7 @@ export default class IsoformEmbeddedVariantTrack {
         transcriptTypes: string[];
         variantTypes: string[];
         showVariantLabel?: boolean;
-        variantFilter: string[];
+        variantFilter?: string[];
         initialHighlight?: string[];
         variantData?: VariantFeature[];
         trackData?: SimpleFeatureSerialized[];

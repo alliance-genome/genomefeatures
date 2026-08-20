@@ -10,6 +10,7 @@ import {
   getJBrowseLink,
   renderTrackDescription,
 } from '../services/TrackService'
+import { filterVariantsByIdentifiers } from '../services/VariantFilterService'
 import {
   generateDelinsPoint,
   generateInsertionPoint,
@@ -34,7 +35,7 @@ export default class IsoformAndVariantTrack {
   private variantData: VariantFeature[]
   private viewer: Selection<SVGGElement, unknown, HTMLElement | null, undefined>
   private width: number
-  private variantFilter: string[]
+  private variantFilter?: string[]
   private isoformFilter: string[]
   private initialHighlight?: string[]
   private height: number
@@ -71,7 +72,7 @@ export default class IsoformAndVariantTrack {
     transcriptTypes: string[]
     variantTypes: string[]
     showVariantLabel?: boolean
-    variantFilter: string[]
+    variantFilter?: string[]
     binRatio: number
     isoformFilter: string[]
     initialHighlight?: string[]
@@ -1003,42 +1004,42 @@ export default class IsoformAndVariantTrack {
     return row_count * ISOFORM_HEIGHT + heightBuffer + totalVariantHeight
   }
 
-  filterVariantData(variantData: VariantFeature[], variantFilter: string[]) {
-    
-    if (!variantFilter || variantFilter.length === 0) {
-      return variantData
-    }
-    
+  filterVariantData(
+    variantData: VariantFeature[],
+    variantFilter?: string[],
+  ): VariantFeature[] {
     if (!variantData || !Array.isArray(variantData)) {
       return []
     }
-    
-    return variantData.filter(v => {
-      let returnVal = false
-      
-      if (
-        variantFilter.includes(v.name) ||
-        (v.allele_symbols?.values &&
-          variantFilter.includes(
-            v.allele_symbols.values[0].replace(/"/g, ''),
-          )) ||
-        (v.symbol?.values &&
-          variantFilter.includes(v.symbol.values[0].replace(/"/g, ''))) ||
-        (v.symbol_text?.values &&
-          variantFilter.includes(v.symbol_text.values[0].replace(/"/g, '')))
-      ) {
-        returnVal = true
-      }
-      const ids =
-        v.allele_ids?.values[0]?.replace(/"|\[|\]| /g, '').split(',') ?? []
-      ids.forEach(id => {
-        if (variantFilter.includes(id)) {
+
+    return filterVariantsByIdentifiers(
+      variantData,
+      variantFilter,
+      (v, filterSet) => {
+        let returnVal = false
+
+        if (
+          filterSet.has(v.name) ||
+          (v.allele_symbols?.values &&
+            filterSet.has(v.allele_symbols.values[0].replace(/"/g, ''))) ||
+          (v.symbol?.values &&
+            filterSet.has(v.symbol.values[0].replace(/"/g, ''))) ||
+          (v.symbol_text?.values &&
+            filterSet.has(v.symbol_text.values[0].replace(/"/g, '')))
+        ) {
           returnVal = true
         }
-      })
-      
-      return returnVal
-    })
+        const ids =
+          v.allele_ids?.values[0]?.replace(/"|\[|\]| /g, '').split(',') ?? []
+        ids.forEach(id => {
+          if (filterSet.has(id)) {
+            returnVal = true
+          }
+        })
+
+        return returnVal
+      },
+    )
   }
 
   renderTooltipDescription(
