@@ -6,7 +6,7 @@ export default class IsoformAndVariantTrack {
     private variantData;
     private viewer;
     private width;
-    private variantFilter;
+    private variantFilter?;
     private isoformFilter;
     private initialHighlight?;
     private height;
@@ -25,7 +25,7 @@ export default class IsoformAndVariantTrack {
         transcriptTypes: string[];
         variantTypes: string[];
         showVariantLabel?: boolean;
-        variantFilter: string[];
+        variantFilter?: string[];
         binRatio: number;
         isoformFilter: string[];
         initialHighlight?: string[];
@@ -40,7 +40,7 @@ export default class IsoformAndVariantTrack {
         speciesTaxonId?: string;
     });
     DrawTrack(): number;
-    filterVariantData(variantData: VariantFeature[], variantFilter: string[]): VariantFeature[];
+    filterVariantData(variantData: VariantFeature[], variantFilter?: string[]): VariantFeature[];
     renderTooltipDescription(tooltipDiv: Selection<HTMLDivElement, unknown, HTMLElement, undefined>, descriptionHtml: string, closeFunction: () => void): void;
     setInitialHighlight(selectedAlleles: string[], svgTarget: Selection<SVGGElement, unknown, null, undefined>): void;
 }

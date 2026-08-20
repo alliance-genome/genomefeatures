@@ -167,7 +167,7 @@ export class GenomeFeatureViewer {
     const range = sequenceOptions.range
     const chromosome = region.chromosome
     
-    const variantFilter = this.config.variantFilter ?? []
+    const variantFilter = this.config.variantFilter
     const isoformFilter = this.config.isoformFilter ?? []
     const htpVariant = this.config.htpVariant ?? ''
     const start = sequenceOptions.start
