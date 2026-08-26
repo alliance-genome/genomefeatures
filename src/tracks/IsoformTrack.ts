@@ -3,7 +3,7 @@ import * as d3 from 'd3'
 import { calculateNewTrackPosition, checkSpace } from '../RenderFunctions'
 import { filterTrackDataForTargetGene } from '../services/TargetGeneService'
 import {
-  getJBrowseLink,
+  getJBrowseUrl,
   renderTrackDescription,
 } from '../services/TrackService'
 import { generateSnvPoints } from '../services/VariantService'
@@ -500,7 +500,7 @@ export default class IsoformTrack {
               row_count += 1
             }
             if (row_count === MAX_ROWS) {
-              const link = getJBrowseLink(
+              const url = getJBrowseUrl(
                 source,
                 chr,
                 this.region.start,
@@ -510,7 +510,9 @@ export default class IsoformTrack {
               track
                 .append('a')
                 .attr('class', 'transcriptLabel')
-                .attr('xlink:show', 'new')
+                .attr('href', url)
+                .attr('target', '_blank')
+                .attr('rel', 'noopener noreferrer')
                 .append('text')
                 .attr('x', 10)
                 .attr(
@@ -520,7 +522,7 @@ export default class IsoformTrack {
                 .attr('fill', 'red')
                 .attr('opacity', 1)
                 .attr('height', isoform_title_height)
-                .html(link)
+                .text('Maximum features displayed.  See full view for more.')
             }
           }
         })

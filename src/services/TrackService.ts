@@ -1,4 +1,4 @@
-import { SimpleFeatureSerialized } from './types'
+import type { SimpleFeatureSerialized } from './types'
 
 function renderStrand(strand: number) {
   if (strand === 1) {
@@ -24,7 +24,7 @@ export function renderTrackDescription(feature: SimpleFeatureSerialized) {
   returnString += '</tbody></table>'
   return returnString
 }
-export function getJBrowseLink(
+export function getJBrowseUrl(
   source: string,
   chr: string,
   start: number,
@@ -61,9 +61,7 @@ export function getJBrowseLink(
     }%3A${start}..${end}`
   } else {
     console.warn('no source found', source)
-    return 'Maximum features displayed.  See full view for more.'
+    return null
   }
-  return `<a href="${
-    link
-  }">Maximum features displayed.  See full view for more.</a>`
+  return link
 }
