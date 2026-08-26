@@ -24,44 +24,64 @@ export function renderTrackDescription(feature: SimpleFeatureSerialized) {
   returnString += '</tbody></table>'
   return returnString
 }
+
+const jBrowseConfigs: Partial<
+  Record<string, { assembly: string; trackSuffixes: string[] }>
+> = {
+  FlyBase: {
+    assembly: 'Drosophila_melanogaster',
+    trackSuffixes: [
+      '_all_genes',
+      '_ht_variants',
+      '_variants',
+      '_multiple-variant_alleles',
+    ],
+  },
+  MGI: {
+    assembly: 'Mus_musculus',
+    trackSuffixes: [
+      '_all_genes',
+      '_ht_variants',
+      '_variants',
+      '_multiple-variant_alleles',
+    ],
+  },
+  WormBase: {
+    assembly: 'Caenorhabditis_elegans',
+    trackSuffixes: ['_all_genes', '_ht_variants', '_variants'],
+  },
+  ZFIN: {
+    assembly: 'Danio_rerio',
+    trackSuffixes: ['_all_genes', '_variants'],
+  },
+  SGD: {
+    assembly: 'Saccharomyces_cerevisiae',
+    trackSuffixes: ['_all_genes', '_ht_variants'],
+  },
+  RGD: {
+    assembly: 'Rattus_norvegicus',
+    trackSuffixes: ['_all_genes', '_ht_variants', '_variants'],
+  },
+  human: {
+    assembly: 'Homo_sapiens',
+    trackSuffixes: ['_all_genes', '_ht_variants'],
+  },
+}
+
 export function getJBrowseUrl(
   source: string,
   chr: string,
   start: number,
   end: number,
 ) {
-  let link = ''
-  if (source === 'FlyBase') {
-    link = `/jbrowse/?data=data%2FDrosophila%20melanogaster&tracks=Variants%2CAll%20Genes&highlight=&loc=${
-      chr
-    }%3A${start}..${end}`
-  } else if (source === 'MGI') {
-    link = `/jbrowse/?data=data%2FMus%20musculus&tracks=Variants%2CAll%20Genes&highlight=&loc=${
-      chr
-    }%3A${start}..${end}`
-  } else if (source === 'WormBase') {
-    link = `/jbrowse/?data=data%2FCaenorhabditis%20elegans&tracks=Variants%2CAll%20Genes&highlight=&loc=${
-      chr
-    }%3A${start}..${end}`
-  } else if (source === 'ZFIN') {
-    link = `/jbrowse/?data=data%2FDanio%20rerio&tracks=Variants%2CAll%20Genes&highlight=&loc=${
-      chr
-    }%3A${start}..${end}`
-  } else if (source === 'SGD') {
-    link = `/jbrowse/?data=data%2FSaccharomyces%20cerevisiae&tracks=Variants%2CAll%20Genes&highlight=&loc=${
-      chr
-    }%3A${start}..${end}`
-  } else if (source === 'RGD') {
-    link = `/jbrowse/?data=data%2FRattus%20norvegicus&tracks=Variants%2CAll%20Genes&highlight=&loc=${
-      chr
-    }%3A${start}..${end}`
-  } else if (source === 'human') {
-    link = `/jbrowse/?data=data%2FHomo%20sapiens&tracks=All%20Genes&highlight=&loc=${
-      chr
-    }%3A${start}..${end}`
-  } else {
+  const config = jBrowseConfigs[source]
+  if (!config) {
     console.warn('no source found', source)
     return null
   }
-  return link
+  const tracks = config.trackSuffixes
+    .map(trackSuffix => `${config.assembly}${trackSuffix}`)
+    .join(',')
+  const loc = encodeURIComponent(`${chr}:${start}..${end}`)
+  return `/jbrowse2?tracklist=true&assembly=${config.assembly}&tracks=${tracks}&loc=${loc}`
 }
