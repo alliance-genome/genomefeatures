@@ -16,7 +16,7 @@ for (const [source, dataDirectory] of Object.entries(speciesDataDirectories)) {
   test(`builds a JBrowse URL for ${source}`, () => {
     assert.equal(
       getJBrowseUrl(source, 'chr1', 100, 200),
-      `https://alliancegenome.org/jbrowse/?data=data%2F${dataDirectory}&tracks=Variants%2CAll%20Genes&highlight=&loc=chr1%3A100..200`,
+      `/jbrowse/?data=data%2F${dataDirectory}&tracks=Variants%2CAll%20Genes&highlight=&loc=chr1%3A100..200`,
     )
   })
 }
@@ -24,7 +24,7 @@ for (const [source, dataDirectory] of Object.entries(speciesDataDirectories)) {
 test('builds a genes-only JBrowse URL for human data', () => {
   assert.equal(
     getJBrowseUrl('human', 'chr1', 100, 200),
-    'https://alliancegenome.org/jbrowse/?data=data%2FHomo%20sapiens&tracks=All%20Genes&highlight=&loc=chr1%3A100..200',
+    '/jbrowse/?data=data%2FHomo%20sapiens&tracks=All%20Genes&highlight=&loc=chr1%3A100..200',
   )
 })
 

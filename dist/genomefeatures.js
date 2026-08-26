@@ -2819,19 +2819,19 @@ function Lt(t) {
 function Fs(t, e, n, r) {
   let a = "";
   if (t === "FlyBase")
-    a = `https://alliancegenome.org/jbrowse/?data=data%2FDrosophila%20melanogaster&tracks=Variants%2CAll%20Genes&highlight=&loc=${e}%3A${n}..${r}`;
+    a = `/jbrowse/?data=data%2FDrosophila%20melanogaster&tracks=Variants%2CAll%20Genes&highlight=&loc=${e}%3A${n}..${r}`;
   else if (t === "MGI")
-    a = `https://alliancegenome.org/jbrowse/?data=data%2FMus%20musculus&tracks=Variants%2CAll%20Genes&highlight=&loc=${e}%3A${n}..${r}`;
+    a = `/jbrowse/?data=data%2FMus%20musculus&tracks=Variants%2CAll%20Genes&highlight=&loc=${e}%3A${n}..${r}`;
   else if (t === "WormBase")
-    a = `https://alliancegenome.org/jbrowse/?data=data%2FCaenorhabditis%20elegans&tracks=Variants%2CAll%20Genes&highlight=&loc=${e}%3A${n}..${r}`;
+    a = `/jbrowse/?data=data%2FCaenorhabditis%20elegans&tracks=Variants%2CAll%20Genes&highlight=&loc=${e}%3A${n}..${r}`;
   else if (t === "ZFIN")
-    a = `https://alliancegenome.org/jbrowse/?data=data%2FDanio%20rerio&tracks=Variants%2CAll%20Genes&highlight=&loc=${e}%3A${n}..${r}`;
+    a = `/jbrowse/?data=data%2FDanio%20rerio&tracks=Variants%2CAll%20Genes&highlight=&loc=${e}%3A${n}..${r}`;
   else if (t === "SGD")
-    a = `https://alliancegenome.org/jbrowse/?data=data%2FSaccharomyces%20cerevisiae&tracks=Variants%2CAll%20Genes&highlight=&loc=${e}%3A${n}..${r}`;
+    a = `/jbrowse/?data=data%2FSaccharomyces%20cerevisiae&tracks=Variants%2CAll%20Genes&highlight=&loc=${e}%3A${n}..${r}`;
   else if (t === "RGD")
-    a = `https://alliancegenome.org/jbrowse/?data=data%2FRattus%20norvegicus&tracks=Variants%2CAll%20Genes&highlight=&loc=${e}%3A${n}..${r}`;
+    a = `/jbrowse/?data=data%2FRattus%20norvegicus&tracks=Variants%2CAll%20Genes&highlight=&loc=${e}%3A${n}..${r}`;
   else if (t === "human")
-    a = `https://alliancegenome.org/jbrowse/?data=data%2FHomo%20sapiens&tracks=All%20Genes&highlight=&loc=${e}%3A${n}..${r}`;
+    a = `/jbrowse/?data=data%2FHomo%20sapiens&tracks=All%20Genes&highlight=&loc=${e}%3A${n}..${r}`;
   else
     return console.warn("no source found", t), null;
   return a;
@@ -3463,7 +3463,10 @@ class Qu {
             a.has(o) && (i = !0);
           }
           if (r.symbol?.values) {
-            const o = r.symbol.values[0].replace(/"|\\[|\\]| /g, "");
+            const o = r.symbol.values[0].replace(
+              /"|\\[|\\]| /g,
+              ""
+            );
             a.has(o) && (i = !0);
           }
           if (r.symbol_text?.values) {
