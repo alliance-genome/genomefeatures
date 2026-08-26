@@ -7,7 +7,7 @@ import {
   setHighlights,
 } from '../RenderFunctions'
 import {
-  getJBrowseLink,
+  getJBrowseUrl,
   renderTrackDescription,
 } from '../services/TrackService'
 import { filterVariantsByIdentifiers } from '../services/VariantFilterService'
@@ -960,13 +960,15 @@ export default class IsoformAndVariantTrack {
             }
             if (row_count === MAX_ROWS && !warningRendered) {
               // *** DANGER EDGE CASE ***/
-              const link = getJBrowseLink(source, chr, viewStart, viewEnd)
+              const url = getJBrowseUrl(source, chr, viewStart, viewEnd)
               ++current_row
               warningRendered = true
               track
                 .append('a')
                 .attr('class', 'transcriptLabel')
-                .attr('xlink:show', 'new')
+                .attr('href', url)
+                .attr('target', '_blank')
+                .attr('rel', 'noopener noreferrer')
                 .append('text')
                 .attr('x', 10)
                 .attr('y', 10)
@@ -977,7 +979,7 @@ export default class IsoformAndVariantTrack {
                 .attr('fill', 'red')
                 .attr('opacity', 1)
                 .attr('height', ISOFORM_TITLE_HEIGHT)
-                .html(link)
+                .text('Maximum features displayed.  See full view for more.')
             }
           }
         })

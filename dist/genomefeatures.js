@@ -2833,8 +2833,8 @@ function Fs(t, e, n, r) {
   else if (t === "human")
     a = `https://alliancegenome.org/jbrowse/?data=data%2FHomo%20sapiens&tracks=All%20Genes&highlight=&loc=${e}%3A${n}..${r}`;
   else
-    return console.warn("no source found", t), "Maximum features displayed.  See full view for more.";
-  return `<a href="${a}">Maximum features displayed.  See full view for more.</a>`;
+    return console.warn("no source found", t), null;
+  return a;
 }
 function Os(t, e, n) {
   if (e === void 0)
@@ -3155,10 +3155,10 @@ class Ju {
             }
             if ($t === p && !M) {
               const C = Fs(u, h, w, x);
-              ++S, M = !0, zt.append("a").attr("class", "transcriptLabel").attr("xlink:show", "new").append("text").attr("x", 10).attr("y", 10).attr(
+              ++S, M = !0, zt.append("a").attr("class", "transcriptLabel").attr("href", C).attr("target", "_blank").attr("rel", "noopener noreferrer").append("text").attr("x", 10).attr("y", 10).attr(
                 "transform",
                 `translate(0,${$t * I + 20 + Q})`
-              ).attr("fill", "red").attr("opacity", 1).attr("height", B).html(C);
+              ).attr("fill", "red").attr("opacity", 1).attr("height", B).text("Maximum features displayed.  See full view for more.");
             }
           }
         });
@@ -3695,10 +3695,10 @@ class ju {
                 this.region.start,
                 this.region.end
               );
-              ++ot, k.append("a").attr("class", "transcriptLabel").attr("xlink:show", "new").append("text").attr("x", 10).attr(
+              ++ot, k.append("a").attr("class", "transcriptLabel").attr("href", bt).attr("target", "_blank").attr("rel", "noopener noreferrer").append("text").attr("x", 10).attr(
                 "transform",
                 `translate(0,${q * T + 10})`
-              ).attr("fill", "red").attr("opacity", 1).attr("height", O).html(bt);
+              ).attr("fill", "red").attr("opacity", 1).attr("height", O).text("Maximum features displayed.  See full view for more.");
             }
           }
         });
