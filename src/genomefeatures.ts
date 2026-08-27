@@ -246,6 +246,7 @@ export class GenomeFeatureViewer {
           geneBounds: track.geneBounds,
           geneSymbol: track.geneSymbol,
           geneId: track.geneId,
+          speciesTaxonId: track.speciesTaxonId,
         })
         trackHeight += isoformTrack.DrawTrack()
       } else if (track.type === TRACK_TYPE.VARIANT) {

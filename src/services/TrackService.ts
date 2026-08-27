@@ -62,10 +62,35 @@ const jBrowseConfigs: Partial<
     assembly: 'Rattus_norvegicus',
     trackSuffixes: ['_all_genes', '_ht_variants', '_variants'],
   },
+  Xenopus_laevis: {
+    assembly: 'Xenopus_laevis',
+    trackSuffixes: ['_all_genes'],
+  },
+  Xenopus_tropicalis: {
+    assembly: 'Xenopus_tropicalis',
+    trackSuffixes: ['_all_genes'],
+  },
   human: {
     assembly: 'Homo_sapiens',
     trackSuffixes: ['_all_genes', '_ht_variants'],
   },
+  'SARS-CoV-2': {
+    assembly: 'SARS-CoV-2',
+    trackSuffixes: ['_all_genes'],
+  },
+}
+
+const jBrowseConfigAliases: Partial<Record<string, string>> = {
+  'NCBITaxon:9606': 'human',
+  'NCBITaxon:10090': 'MGI',
+  'NCBITaxon:10116': 'RGD',
+  'NCBITaxon:8355': 'Xenopus_laevis',
+  'NCBITaxon:8364': 'Xenopus_tropicalis',
+  'NCBITaxon:7955': 'ZFIN',
+  'NCBITaxon:7227': 'FlyBase',
+  'NCBITaxon:6239': 'WormBase',
+  'NCBITaxon:559292': 'SGD',
+  'NCBITaxon:2697049': 'SARS-CoV-2',
 }
 
 export function getJBrowseUrl(
@@ -74,7 +99,7 @@ export function getJBrowseUrl(
   start: number,
   end: number,
 ) {
-  const config = jBrowseConfigs[source]
+  const config = jBrowseConfigs[jBrowseConfigAliases[source] ?? source]
   if (!config) {
     console.warn('no source found', source)
     return null

@@ -25,6 +25,7 @@ export default class IsoformTrack {
   private geneBounds?: { start: number; end: number }
   private geneSymbol?: string
   private geneId?: string
+  private speciesTaxonId?: string
 
   constructor({
     viewer,
@@ -38,6 +39,7 @@ export default class IsoformTrack {
     geneBounds,
     geneSymbol,
     geneId,
+    speciesTaxonId,
   }: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     viewer: Selection<SVGGElement, unknown, HTMLElement | null, any>
@@ -51,6 +53,7 @@ export default class IsoformTrack {
     geneBounds?: { start: number; end: number }
     geneSymbol?: string
     geneId?: string
+    speciesTaxonId?: string
   }) {
     this.trackData = trackData ?? []
     this.viewer = viewer
@@ -63,6 +66,7 @@ export default class IsoformTrack {
     this.geneBounds = geneBounds
     this.geneSymbol = geneSymbol
     this.geneId = geneId
+    this.speciesTaxonId = speciesTaxonId
   }
 
   private renderTooltipDescription(
@@ -111,7 +115,7 @@ export default class IsoformTrack {
     const htpVariant = this.htpVariant
     const viewer = this.viewer
     const width = this.width
-    const source = this.genome
+    const source = this.speciesTaxonId ?? this.genome
     const chr = data[0]?.seqId
 
     const MAX_ROWS = 10
