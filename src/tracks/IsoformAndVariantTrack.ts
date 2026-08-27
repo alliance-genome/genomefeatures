@@ -126,7 +126,7 @@ export default class IsoformAndVariantTrack {
     }
     
     
-    const source = this.trackData[0].source
+    const source = this.speciesTaxonId ?? this.trackData[0].source
     const chr = this.trackData[0].seqId
     
     

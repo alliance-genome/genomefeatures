@@ -39,10 +39,41 @@ const speciesJBrowseConfigs = {
   },
 } as const
 
+const taxonJBrowseConfigs = {
+  'NCBITaxon:9606': speciesJBrowseConfigs.human,
+  'NCBITaxon:10090': speciesJBrowseConfigs.MGI,
+  'NCBITaxon:10116': speciesJBrowseConfigs.RGD,
+  'NCBITaxon:8355': {
+    assembly: 'Xenopus_laevis',
+    tracks: 'Xenopus_laevis_all_genes',
+  },
+  'NCBITaxon:8364': {
+    assembly: 'Xenopus_tropicalis',
+    tracks: 'Xenopus_tropicalis_all_genes',
+  },
+  'NCBITaxon:7955': speciesJBrowseConfigs.ZFIN,
+  'NCBITaxon:7227': speciesJBrowseConfigs.FlyBase,
+  'NCBITaxon:6239': speciesJBrowseConfigs.WormBase,
+  'NCBITaxon:559292': speciesJBrowseConfigs.SGD,
+  'NCBITaxon:2697049': {
+    assembly: 'SARS-CoV-2',
+    tracks: 'SARS-CoV-2_all_genes',
+  },
+} as const
+
 for (const [source, config] of Object.entries(speciesJBrowseConfigs)) {
   test(`builds a JBrowse 2 URL for ${source}`, () => {
     assert.equal(
       getJBrowseUrl(source, 'chr1', 100, 200),
+      `/jbrowse2?tracklist=true&assembly=${config.assembly}&tracks=${config.tracks}&loc=chr1%3A100..200`,
+    )
+  })
+}
+
+for (const [taxonId, config] of Object.entries(taxonJBrowseConfigs)) {
+  test(`builds a JBrowse 2 URL for ${taxonId}`, () => {
+    assert.equal(
+      getJBrowseUrl(taxonId, 'chr1', 100, 200),
       `/jbrowse2?tracklist=true&assembly=${config.assembly}&tracks=${config.tracks}&loc=chr1%3A100..200`,
     )
   })

@@ -13,7 +13,8 @@ export default class IsoformTrack {
     private geneBounds?;
     private geneSymbol?;
     private geneId?;
-    constructor({ viewer, height, width, transcriptTypes, htpVariant, trackData, region, genome, geneBounds, geneSymbol, geneId, }: {
+    private speciesTaxonId?;
+    constructor({ viewer, height, width, transcriptTypes, htpVariant, trackData, region, genome, geneBounds, geneSymbol, geneId, speciesTaxonId, }: {
         viewer: Selection<SVGGElement, unknown, HTMLElement | null, any>;
         height: number;
         width: number;
@@ -28,6 +29,7 @@ export default class IsoformTrack {
         };
         geneSymbol?: string;
         geneId?: string;
+        speciesTaxonId?: string;
     });
     private renderTooltipDescription;
     DrawTrack(): number;
